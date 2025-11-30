@@ -1,6 +1,4 @@
-// src/components/EditableText.tsx (VERSI FINAL BEBAS ERROR DAN BERSIH)
-
-import React, { useState, useRef, ReactNode } from 'react';
+import React, { useState, useRef, ReactNode, ElementType } from 'react';
 import { useAdmin } from '@/context/AdminContext'; 
 import { Edit } from 'lucide-react';
 
@@ -15,11 +13,15 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
   const { isAdmin } = useAdmin();
   const [isEditing, setIsEditing] = useState(false);
   
+  // Ref untuk menampung elemen HTML generik
+  // Kita harus menggunakan tipe HTMLElement, karena elemen yang dirender (Tag) bersifat dinamis.
   const contentRef = useRef<HTMLElement | null>(null);
 
-  const Tag = tagName;
+  // Perubahan di sini: Menggunakan type casting untuk memastikan Tag dikenali sebagai komponen React yang valid
+  const Tag = tagName as ElementType;
 
   const handleBlur = () => {
+    // Memastikan ref ada dan pengguna adalah Admin sebelum menyimpan
     if (contentRef.current && isAdmin) {
       const newContent = contentRef.current.innerText.trim();
       onSave(newContent); 
@@ -28,27 +30,18 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLElement>) => {
+    // Mencegah baris baru saat Enter ditekan jika bukan div atau textarea
     if (e.key === 'Enter' && tagName !== 'div' && tagName !== 'textarea') {
       e.preventDefault(); 
       contentRef.current?.blur(); 
     }
   };
-  
-  // PERBAIKAN: Objek props diketik secara eksplisit
-  const editableProps = {
-    contentEditable: (isAdmin && isEditing ? "true" : "false") as "true" | "false",
-    suppressContentEditableWarning: true,
-    onBlur: handleBlur,
-    onKeyDown: handleKeyPress,
-    onClick: () => {
-        if (isAdmin && !isEditing) setIsEditing(true);
-    },
-    // Tambahkan properti lain yang dibutuhkan, diketik sebagai any agar TS tidak bingung
-    style: {} as any // Menambahkan style kosong agar TS tidak error pada properti style
-  };
 
   // Tampilan dasar saat tidak di mode Admin
+  // Di sini Tag akan berfungsi sebagai elemen HTML biasa (span, p, h1, dsb.)
   if (!isAdmin) {
+    // Catatan: Anda dapat menggunakan <Tag as="span" /> jika Anda menggunakan styled-components atau library serupa.
+    // Karena ini menggunakan dynamic JSX element, syntax ini sudah benar.
     return <Tag className={className}>{children}</Tag>;
   }
 
@@ -56,12 +49,27 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
   return (
     <div className={`relative group inline-block ${className}`}>
       <Tag
-        // PERBAIKAN: Gunakan contentRef dengan casting sederhana
-        ref={contentRef as React.RefObject<HTMLElement>}
+        // 1. Ref menggunakan as any (solusi paling stabil untuk ref dinamis)
+        // Ini diperlukan karena Tag adalah variabel dinamis, bukan string literal
+        ref={contentRef as any}
         
-        // PERBAIKAN: Spread semua properti yang bisa diedit. Gunakan Casting pada Tag.
-        {...editableProps}
-
+        // 2. contentEditable diketik secara eksplisit
+        // Menggunakan string "true" atau "false"
+        contentEditable={isAdmin && isEditing ? "true" : "false"}
+        
+        // 3. Properti Event: Menghapus "as any" yang tidak perlu
+        // Tipe sudah diinferensi dengan benar melalui ref dan React.KeyboardEvent
+        onBlur={handleBlur}
+        onKeyDown={handleKeyPress}
+        
+        // Sintaks ini sudah diperbaiki sebelumnya
+        onClick={() => {
+            if (isAdmin && !isEditing) setIsEditing(true);
+        }}
+        
+        // 4. Properti Lain
+        suppressContentEditableWarning={true}
+        
         // Styling diterapkan di sini
         className={`focus:outline-none focus:ring-2 focus:ring-gold focus:bg-muted/30 p-1 rounded transition-all duration-200 cursor-text ${className}`}
       >
