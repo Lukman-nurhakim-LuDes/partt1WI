@@ -1,19 +1,30 @@
-// src/components/invitation/GallerySection.tsx (Versi Diperbarui)
+// src/components/invitation/GallerySection.tsx
 
 import { useState } from "react";
 import { X, PlusCircle } from "lucide-react";
 import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
-import useFetchGallery from "@/hooks/useFetchGallery"; // Import hook baru
-import { useAdmin } from "@/context/AdminContext"; // Import hook admin
+
+// Import Hooks & Context
+import useFetchGallery from "@/hooks/useFetchGallery"; 
+import { useAdmin } from "@/context/AdminContext"; 
+
+// Interface dasar untuk Gallery Item (sesuai hook)
+interface GalleryItem {
+  id: number;
+  src: string;
+  order_index: number;
+}
+
 
 const GallerySection = () => {
-  const { galleryItems, isLoading, error } = useFetchGallery(); // Ambil data
-  const { isAdmin } = useAdmin(); // Ambil state admin
+  const { photos, isLoading, error, uploadGalleryPhoto } = useFetchGallery(); // Menggunakan 'photos' sesuai hook
+  const { isAdmin } = useAdmin(); 
   
+  // Menggunakan index array untuk melacak gambar yang dipilih
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   
-  // Ambil gambar yang dipilih dari array
-  const selectedImage = selectedImageIndex !== null ? galleryItems[selectedImageIndex] : null;
+  // Mengambil gambar yang dipilih dari array 'photos'
+  const selectedImage = selectedImageIndex !== null ? photos[selectedImageIndex] : null;
 
   // --- Handling Loading/Error States ---
   if (isLoading) {
@@ -31,6 +42,22 @@ const GallerySection = () => {
         </section>
     );
   }
+
+  // --- Handling Upload Logic (Placeholder) ---
+  const handleUploadClick = () => {
+      if (isAdmin) {
+          // Logic nyata: Memicu modal atau input file
+          alert('Admin Mode: Buka Modal Upload Foto Supabase');
+          // const fileInput = document.createElement('input');
+          // fileInput.type = 'file';
+          // fileInput.accept = 'image/*';
+          // fileInput.onchange = (e) => {
+          //    if (e.target.files) uploadGalleryPhoto(e.target.files[0]);
+          // };
+          // fileInput.click();
+      }
+  };
+
 
   return (
     <section className="relative py-24 overflow-hidden">
@@ -58,8 +85,7 @@ const GallerySection = () => {
         {isAdmin && (
             <div className="flex justify-center mb-8">
                 <button 
-                    // Nanti bisa diganti dengan modal upload
-                    onClick={() => alert('Buka Modal Upload Foto Supabase')} 
+                    onClick={handleUploadClick} 
                     className="flex items-center gap-2 bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-2 rounded-full transition-all glow-gold"
                 >
                     <PlusCircle className="w-4 h-4" /> Tambah Foto Galeri
@@ -69,9 +95,11 @@ const GallerySection = () => {
         
         {/* Gallery Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {galleryItems.map((item, index) => (
+          
+          {/* === PERBAIKAN UTAMA: Pemeriksaan Kondisional photos && === */}
+          {photos && photos.map((item, index) => (
             <div
-              key={item.id} // Menggunakan ID dari Supabase sebagai key
+              key={item.id} 
               className="group cursor-pointer animate-fade-in"
               style={{ animationDelay: `${index * 0.05}s` }}
               onClick={() => setSelectedImageIndex(index)}
@@ -86,7 +114,7 @@ const GallerySection = () => {
                     loading="lazy"
                 />
                 
-                {/* Gold Frame Effect & Overlay on Hover (tetap sama) */}
+                {/* Gold Frame Effect & Overlay on Hover */}
                 <div className="absolute inset-0 border-4 border-gold/20 group-hover:border-gold/40 transition-all duration-300" />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <span className="text-gold text-sm">View</span>
@@ -95,10 +123,16 @@ const GallerySection = () => {
               </div>
             </div>
           ))}
+          
+          {/* Pesan jika tidak ada foto dan tidak loading */}
+          {!isLoading && photos.length === 0 && (
+             <p className="text-foreground/50 col-span-full text-center">Belum ada foto di galeri. Tambahkan di Mode Admin.</p>
+          )}
+
         </div>
       </div>
       
-      {/* Lightbox Modal (Diperbarui untuk Gambar Live) */}
+      {/* Lightbox Modal */}
       {selectedImage !== null && (
         <div 
           className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6"
@@ -113,7 +147,7 @@ const GallerySection = () => {
           
           <div 
             className="relative max-w-4xl w-full h-full md:h-auto" 
-            onClick={(e) => e.stopPropagation()} // Mencegah klik di dalam modal menutupnya
+            onClick={(e) => e.stopPropagation()}
           >
             <img 
                 src={selectedImage.src} 
