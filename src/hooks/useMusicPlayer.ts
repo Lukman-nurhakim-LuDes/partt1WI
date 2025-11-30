@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-const MUSIC_PATH = "/audio/background-music.mp3"; 
+const MUSIC_PATH = "/music/aku memilihmu.mp3"; 
 
 const useMusicPlayer = () => {
     const audioRef = useRef(new Audio(MUSIC_PATH));

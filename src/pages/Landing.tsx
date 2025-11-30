@@ -1,3 +1,5 @@
+// src/pages/Landing.tsx (Versi Diperbarui)
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,39 +7,48 @@ import { Button } from "@/components/ui/button";
 import satinBerryBg from "@/assets/satin-berry-bg.jpg";
 import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
 
-// Import custom hook yang mengelola state musik global
-import useMusicPlayer from "@/hooks/useMusicPlayer"; // Sesuaikan path jika perlu
+// Import custom hooks
+import useMusicPlayer from "@/hooks/useMusicPlayer";
+import EditableText from "@/components/EditableText"; // Import komponen editing
 
 const Landing = () => {
   const navigate = useNavigate();
-  // Ambil fungsi startMusic dari hook. Kita tidak butuh isPlaying atau togglePlay di halaman ini.
   const { startMusic } = useMusicPlayer(); 
-  
-  // Hapus state [isPlaying] dan [audio] yang lama karena sudah dipindahkan ke hook
 
+  // --- STATE UNTUK DATA EDITABLE ---
+  const [mainTitle, setMainTitle] = useState("Malam Keajaiban");
+  const [subTitle, setSubTitle] = useState("THE MIRACLE NIGHT");
+  const [dateText, setDateText] = useState("Sabtu, 15 Februari 2025");
+  const [venueText, setVenueText] = useState("Grand Ballroom • Jakarta");
+
+  // Fungsi untuk menyimpan perubahan pada field spesifik
+  const handleSave = (setter: React.Dispatch<React.SetStateAction<string>>, fieldName: string) => (newContent: string) => {
+    setter(newContent);
+    console.log(`[LANDING PAGE] Field ${fieldName} diupdate: ${newContent}`);
+    // Logic Nyata: updateSupabase('landing_page', { field: fieldName, content: newContent });
+  };
+  
   // Fungsi yang dipanggil saat tombol "Masuk" diklik
   const handleEnter = () => {
-    // 1. Panggil startMusic() dari hook: ini yang menginisiasi musik (dianggap interaksi user)
     startMusic(); 
-    // 2. Navigasi ke halaman utama undangan
     navigate("/invitation");
   };
 
+  // Hapus state [isPlaying] dan [audio] yang lama karena sudah dipindahkan ke hook
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Satin Berry Background with Animation */}
+      {/* Backgrounds... (Tetap sama) */}
       <div 
         className="absolute inset-0 bg-cover bg-center animate-parallax"
         style={{ backgroundImage: `url(${satinBerryBg})` }}
       />
       
-      {/* Gold Bokeh Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-screen"
         style={{ backgroundImage: `url(${goldBokehOverlay})` }}
       />
       
-      {/* Dark Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70" />
       
       {/* Content */}
@@ -45,28 +56,44 @@ const Landing = () => {
         <div className="animate-fade-in space-y-8">
           {/* Main Title */}
           <h1 className="text-6xl md:text-8xl font-bold text-gold drop-shadow-2xl tracking-wide">
-            Malam Keajaiban
+            {/* 1. EDITABLE TEXT: Judul Utama */}
+            <EditableText onSave={handleSave(setMainTitle, 'mainTitle')} tagName="span">
+                {mainTitle}
+            </EditableText>
           </h1>
           
           {/* Subtitle */}
           <p className="text-2xl md:text-3xl text-foreground/90 font-light tracking-widest">
-            THE MIRACLE NIGHT
+            {/* 2. EDITABLE TEXT: Subjudul */}
+            <EditableText onSave={handleSave(setSubTitle, 'subTitle')} tagName="span">
+                {subTitle}
+            </EditableText>
           </p>
           
           {/* Event Details */}
           <div className="space-y-2 text-lg md:text-xl text-gold/80">
-            <p>Sabtu, 15 Februari 2025</p>
-            <p className="text-foreground/70">Grand Ballroom • Jakarta</p>
+            <p>
+                {/* 3. EDITABLE TEXT: Tanggal */}
+                <EditableText onSave={handleSave(setDateText, 'dateText')} tagName="span">
+                    {dateText}
+                </EditableText>
+            </p>
+            <p className="text-foreground/70">
+                {/* 4. EDITABLE TEXT: Venue Singkat */}
+                <EditableText onSave={handleSave(setVenueText, 'venueText')} tagName="span">
+                    {venueText}
+                </EditableText>
+            </p>
           </div>
           
-          {/* Decorative Line */}
+          {/* Decorative Line (Tetap sama) */}
           <div className="flex items-center justify-center gap-4 py-6">
             <div className="h-px w-20 bg-gold/50" />
             <div className="h-2 w-2 rotate-45 bg-gold/50" />
             <div className="h-px w-20 bg-gold/50" />
           </div>
           
-          {/* CTA Button */}
+          {/* CTA Button (Tetap sama) */}
           <Button
             onClick={handleEnter} // Pemicu musik dan navigasi
             size="lg"
@@ -77,11 +104,10 @@ const Landing = () => {
         </div>
         
         {/* HILANGKAN TOMBOL MUSIC CONTROL DARI SINI */}
-        {/* Tombol kontrol musik sekarang hanya ada di GlobalMusicControl.tsx */}
         
       </div>
       
-      {/* Sparkle Effects */}
+      {/* Sparkle Effects (Tetap sama) */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(20)].map((_, i) => (
           <div

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useFlipAnimation } from '../../hooks/useFlipAnimation'; // Sesuaikan path ini
-// Jika Anda menggunakan file CSS terpisah, pastikan mengimpornya:
-// import './CountdownTimer.css'; 
+import { useFlipAnimation } from '../../hooks/useFlipAnimation'; // Sesuaikan path jika perlu
+// import './CountdownTimer.css'; // Komentar ini bisa dihapus jika Anda tidak menggunakan file CSS terpisah
 
 // --- Interfaces dan Helper Functions ---
 
@@ -23,7 +22,7 @@ const padToTwoDigits = (num: number): string => {
 // --- Custom Hook untuk Hitungan Mundur ---
 
 const useCountdown = (targetDate: string): TimeLeft => {
-    // Inisialisasi state awal. Jika jarak masih besar, '00' akan diabaikan oleh useFlipAnimation
+    // Inisialisasi state awal
     const [timeLeft, setTimeLeft] = useState<TimeLeft>({
         days: '00',
         hours: '00',
@@ -31,7 +30,6 @@ const useCountdown = (targetDate: string): TimeLeft => {
         seconds: '00',
     });
     
-    // Simpan target time di luar state agar tidak dihitung ulang
     const targetTime = new Date(targetDate).getTime();
 
     useEffect(() => {
@@ -72,25 +70,17 @@ interface FlipCardUnitProps {
 }
 
 const FlipCardUnit: React.FC<FlipCardUnitProps> = ({ label, currentValue }) => {
-    // Gunakan custom hook untuk animasi
     const { previousValue, isFlipping } = useFlipAnimation(currentValue);
 
-    // Memecah nilai (misal '12') menjadi 2 digit untuk tampilan
     const [currentD1, currentD2] = currentValue.split('');
     const [prevD1, prevD2] = previousValue.split('');
     
-    // Array unit untuk iterasi (membuat dua digit dalam satu card)
     const digits = [
         { current: currentD1, prev: prevD1, id: 1 },
         { current: currentD2, prev: prevD2, id: 2 },
     ];
     
-    // Helper untuk menentukan apakah digit tersebut sedang memicu flip
-    const getFlipClass = (index: number) => {
-        // Detik (index 1) selalu memicu flip. Unit lain hanya flip jika nilainya berubah.
-        const shouldFlip = isFlipping && digits[index].current !== digits[index].prev;
-        return shouldFlip ? 'is-flipping' : ''; 
-    };
+    // Perhatikan: getFlipClass tidak digunakan jika Anda mengandalkan isFlipping langsung di JSX
     
     return (
         <div className="flip-card-unit">
@@ -98,11 +88,12 @@ const FlipCardUnit: React.FC<FlipCardUnitProps> = ({ label, currentValue }) => {
                 {digits.map((digit, index) => (
                     <div 
                         key={digit.id} 
-                        className={`digit-container ${getFlipClass(index)}`}
+                        // Tambahkan glow-gold saat flipping
+                        className={`digit-container ${isFlipping ? 'glow-gold' : ''}`}
                     >
                         {/* 1. Angka Statis (Belum Flip/Nilai Lama) */}
-                        <span className="digit-top" data-content={digit.prev}></span>
-                        <span className="digit-bottom" data-content={digit.prev}></span>
+                        <span className="digit-top" data-content={digit.current}></span>
+                        <span className="digit-bottom" data-content={digit.current}></span>
 
                         {/* 2. Kartu Flip (Hanya muncul saat isFlipping) */}
                         {isFlipping && (
@@ -133,7 +124,6 @@ const FlipCardUnit: React.FC<FlipCardUnitProps> = ({ label, currentValue }) => {
 const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
     const timeLeft = useCountdown(targetDate);
 
-    // Array untuk iterasi dan menampilkan unit waktu
     const units = [
         { label: 'Hari', value: timeLeft.days, id: 'days' },
         { label: 'Jam', value: timeLeft.hours, id: 'hours' },
@@ -142,9 +132,12 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
     ];
 
     return (
-        <div className="countdown-container py-10">
+        // === PERUBAHAN UTAMA: Tambahkan text-center untuk meratakan teks ===
+        <div className="countdown-container py-10 text-center"> 
             <h3 className="countdown-title animate-fade-in">Menghitung Mundur Hari Bahagia</h3>
-            <div className="timer-wrapper flex justify-center mt-5">
+            
+            {/* === PERUBAHAN UTAMA: Tambahkan justify-center untuk meratakan kartu === */}
+            <div className="timer-wrapper flex justify-center mt-5"> 
                 {units.map((unit) => (
                     <FlipCardUnit
                         key={unit.id}

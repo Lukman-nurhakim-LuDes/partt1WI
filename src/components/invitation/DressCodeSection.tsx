@@ -1,29 +1,61 @@
+// src/components/invitation/DressCodeSection.tsx (Versi Diperbarui)
+
+import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import satinBerryBg from "@/assets/satin-berry-bg.jpg";
 import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg";
+import EditableText from "@/components/EditableText"; // Import komponen editing
+// Anda perlu membuat custom hook untuk mengelola data DressCode jika ingin dari Supabase
+// Misalnya: import useFetchDressCode from "@/hooks/useFetchDressCode"; 
+
+const initialDressCodes = [
+  {
+    title: "Formal Evening Gown",
+    description: "Gaun malam formal dengan sentuhan elegan",
+    bgClass: "bg-primary"
+  },
+  {
+    title: "Black Tie Suit",
+    description: "Setelan formal hitam dengan dasi kupu-kupu",
+    bgClass: "bg-secondary"
+  },
+  {
+    title: "Cocktail Dress",
+    description: "Dress cocktail dengan aksen glamour",
+    bgClass: "bg-gold/80"
+  }
+];
 
 const DressCodeSection = () => {
-  const dressCodeImages = [
-    {
-      title: "Formal Evening Gown",
-      description: "Gaun malam formal dengan sentuhan elegan",
-      bgClass: "bg-primary"
-    },
-    {
-      title: "Black Tie Suit",
-      description: "Setelan formal hitam dengan dasi kupu-kupu",
-      bgClass: "bg-secondary"
-    },
-    {
-      title: "Cocktail Dress",
-      description: "Dress cocktail dengan aksen glamour",
-      bgClass: "bg-gold/80"
-    }
-  ];
+  // --- STATE LOKAL (PLACEHOLDER DATA) ---
+  const [sectionTitle, setSectionTitle] = useState("Dress Code");
+  const [sectionSubtitle, setSectionSubtitle] = useState("Black Tie / Formal Evening Attire");
+  const [additionalInfo, setAdditionalInfo] = useState("Kami mengundang Anda untuk tampil menawan dalam balutan busana formal terbaik Anda. Mari bersama-sama ciptakan suasana malam yang penuh keanggunan dan kemewahan.");
+  const [dressCodeItems, setDressCodeItems] = useState(initialDressCodes);
+
+
+  // Fungsi placeholder untuk menyimpan ke database (Ganti dengan logic Supabase Anda)
+  const handleSectionTextSave = (setter: React.Dispatch<React.SetStateAction<string>>, fieldName: string) => (newContent: string) => {
+    setter(newContent);
+    console.log(`[DRESS CODE] Perubahan pada ${fieldName} disimpan: ${newContent}`);
+    // Logic Nyata: updateSupabase('dress_code_main', { field: fieldName, content: newContent });
+  };
+  
+  // Fungsi untuk menyimpan perubahan pada item dress code tertentu
+  const handleItemSave = (index: number, field: 'title' | 'description') => (newContent: string) => {
+    setDressCodeItems(prevItems => 
+      prevItems.map((item, i) => 
+        i === index ? { ...item, [field]: newContent } : item
+      )
+    );
+    console.log(`[DRESS CODE] Item ${index} field ${field} diupdate.`);
+    // Logic Nyata: updateSupabase('dress_code_items', { id: itemId, field: field, content: newContent });
+  };
+
 
   return (
     <section className="relative py-24 overflow-hidden">
-      {/* Mixed Satin Background */}
+      {/* Backgrounds... (Tetap sama) */}
       <div className="absolute inset-0 flex">
         <div 
           className="w-1/2 bg-cover bg-center opacity-20"
@@ -43,19 +75,25 @@ const DressCodeSection = () => {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Sparkles className="w-8 h-8 text-gold" />
             <h2 className="text-5xl md:text-6xl font-bold text-gold">
-              Dress Code
+                {/* 1. EDITABLE TEXT: Judul Utama */}
+                <EditableText onSave={handleSectionTextSave(setSectionTitle, 'title')} tagName="span">
+                    {sectionTitle}
+                </EditableText>
             </h2>
             <Sparkles className="w-8 h-8 text-gold" />
           </div>
           <div className="h-1 w-32 bg-gold/50 mx-auto" />
           <p className="text-xl text-foreground/70">
-            Black Tie / Formal Evening Attire
+            {/* 2. EDITABLE TEXT: Subjudul */}
+            <EditableText onSave={handleSectionTextSave(setSectionSubtitle, 'subtitle')} tagName="span">
+                {sectionSubtitle}
+            </EditableText>
           </p>
         </div>
         
         {/* Dress Code Cards */}
         <div className="grid md:grid-cols-3 gap-8">
-          {dressCodeImages.map((item, index) => (
+          {dressCodeItems.map((item, index) => (
             <div 
               key={index}
               className="group animate-fade-in"
@@ -75,10 +113,16 @@ const DressCodeSection = () => {
                 {/* Card Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h3 className="text-2xl font-bold text-gold mb-2">
-                    {item.title}
+                    {/* 3. EDITABLE TEXT: Judul Item */}
+                    <EditableText onSave={handleItemSave(index, 'title')} tagName="span">
+                        {item.title}
+                    </EditableText>
                   </h3>
                   <p className="text-foreground/80">
-                    {item.description}
+                    {/* 4. EDITABLE TEXT: Deskripsi Item */}
+                    <EditableText onSave={handleItemSave(index, 'description')} tagName="span">
+                        {item.description}
+                    </EditableText>
                   </p>
                 </div>
               </div>
@@ -89,8 +133,10 @@ const DressCodeSection = () => {
         {/* Additional Info */}
         <div className="mt-12 text-center">
           <p className="text-lg text-foreground/60 max-w-3xl mx-auto">
-            Kami mengundang Anda untuk tampil menawan dalam balutan busana formal terbaik Anda. 
-            Mari bersama-sama ciptakan suasana malam yang penuh keanggunan dan kemewahan.
+            {/* 5. EDITABLE TEXT: Informasi Tambahan */}
+            <EditableText onSave={handleSectionTextSave(setAdditionalInfo, 'additionalInfo')} tagName="span">
+                {additionalInfo}
+            </EditableText>
           </p>
         </div>
       </div>

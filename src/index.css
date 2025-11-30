@@ -132,12 +132,12 @@ All colors MUST be HSL.
     
     /* Styling Kontainer Timer */
     .countdown-container {
-        @apply bg-background;
+        /* background-color dihapus untuk membuat container transparan */
+        @apply py-10; 
     }
     
     .countdown-title {
         @apply text-gold text-2xl font-bold uppercase tracking-widest;
-        /* Playfair Display sudah diterapkan di @layer base */
     }
 
     /* Styling Unit Kartu */
@@ -152,9 +152,9 @@ All colors MUST be HSL.
     }
     
     .flip-card-wrapper {
+        /* Hapus background-color agar transparan */
         @apply flex rounded-xl border-2 border-solid overflow-hidden elegant-shadow;
         border-color: hsl(var(--accent)); /* Garis luar emas */
-        background-color: hsl(var(--black-deep)); 
     }
     
     .digit-container {
@@ -171,7 +171,8 @@ All colors MUST be HSL.
         /* Setup 3D */
         transform-style: preserve-3d;
         perspective: 200px;
-        transition: box-shadow 0.3s ease-in-out; /* Transisi untuk glow */
+        transition: box-shadow 0.3s ease-in-out;
+        /* Hapus background-color agar transparan */
     }
 
     .digit-container:first-child {
@@ -190,7 +191,7 @@ All colors MUST be HSL.
         left: 0;
         transform: rotateX(0deg); 
         transform-style: preserve-3d;
-        backface-visibility: hidden; /* Sembunyikan sisi belakang saat rotasi */
+        backface-visibility: hidden;
     }
     
     .digit-top, .flip-top {
@@ -203,7 +204,6 @@ All colors MUST be HSL.
     }
     
     /* Content Styling */
-    /* Mengambil konten dari data-content di JSX */
     .digit-top::after, .digit-bottom::after, .flip-top::after, .flip-bottom::after {
         content: attr(data-content);
         position: absolute;
@@ -216,27 +216,34 @@ All colors MUST be HSL.
     }
     
     .digit-bottom::after, .flip-bottom::after {
-        /* Menggeser angka ke atas agar hanya bagian bawah yang terlihat */
         top: -100%; 
     }
     
     /* Styling Kartu Flip */
+    /* background-color dihapus untuk elemen statis, namun... */
     .flip-top, .flip-bottom {
-        background-color: hsl(var(--black-deep));
+        /* KITA HARUS MEMPERTAHANKAN WARNA GELAP pada flip-card itu sendiri 
+           agar animasi terlihat. Kita gunakan black-deep Anda */
+        background-color: hsl(var(--black-deep)); 
         z-index: 2;
     }
     
     .flip-top {
-        transform-origin: 50% 100%; /* Engsel di bagian bawah */
+        transform-origin: 50% 100%; 
     }
     
     .flip-bottom {
-        transform-origin: 50% 0%; /* Engsel di bagian atas */
+        transform-origin: 50% 0%; 
         z-index: 3;
     }
     
+    /* Elemen statis (yang tidak flip) dibiarkan transparan untuk menciptakan kontras */
+    .digit-top, .digit-bottom {
+        background-color: transparent; 
+    }
+
     .digit-bottom {
-        z-index: 1; /* Angka statis di belakang flip */
+        z-index: 1; 
     }
 }
 
@@ -280,16 +287,16 @@ All colors MUST be HSL.
           transform: rotateX(0deg);
       }
       100% {
-          transform: rotateX(-180deg); /* Berputar ke belakang */
+          transform: rotateX(-180deg); 
       }
   }
 
   @keyframes flip-bottom-in {
       0% {
-          transform: rotateX(180deg); /* Mulai terbalik */
+          transform: rotateX(180deg); 
       }
       100% {
-          transform: rotateX(0deg); /* Terbuka ke depan */
+          transform: rotateX(0deg); 
       }
   }
 

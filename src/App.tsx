@@ -1,3 +1,5 @@
+// src/App.tsx 
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,8 +9,15 @@ import Landing from "./pages/Landing";
 import Invitation from "./pages/Invitation";
 import NotFound from "./pages/NotFound";
 
-// 1. IMPORT KOMPONEN KONTROL MUSIK GLOBAL
+// Component Global (Tersedia di /components/invitation/)
 import GlobalMusicControl from "./components/invitation/GlobalMusicControl"; 
+
+// Component Global (Tersedia di /components/ - ASUMSI PATH INI)
+import AdminToggle from "./components/AdminToggle"; 
+
+// Context Global (Tersedia di /context/)
+import { AdminProvider } from "./context/AdminContext"; 
+
 
 const queryClient = new QueryClient();
 
@@ -17,18 +26,22 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        {/* Kontrol Musik DITEMPATKAN di sini, di dalam BrowserRouter */}
-        {/* Ini memastikan kontrol selalu ada dan tidak di-unmount saat navigasi */}
-        <GlobalMusicControl /> 
-        
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/invitation" element={<Invitation />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      {/* WRAP DENGAN ADMIN PROVIDER */}
+      <AdminProvider> 
+        <BrowserRouter>
+          {/* Global Music Control diletakkan di luar Routes */}
+          <GlobalMusicControl /> 
+          
+          {/* RENDER ADMIN TOGGLE - Harus di dalam AdminProvider & BrowserRouter */}
+          <AdminToggle /> 
+          
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/invitation" element={<Invitation />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AdminProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

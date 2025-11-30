@@ -1,27 +1,40 @@
+// src/components/invitation/GallerySection.tsx (Versi Diperbarui)
+
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, PlusCircle } from "lucide-react";
 import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
+import useFetchGallery from "@/hooks/useFetchGallery"; // Import hook baru
+import { useAdmin } from "@/context/AdminContext"; // Import hook admin
 
 const GallerySection = () => {
-  const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const { galleryItems, isLoading, error } = useFetchGallery(); // Ambil data
+  const { isAdmin } = useAdmin(); // Ambil state admin
   
-  // Placeholder gallery items with gradients
-  const galleryItems = [
-    { color: "from-primary to-primary/60" },
-    { color: "from-secondary to-secondary/60" },
-    { color: "from-gold to-gold/60" },
-    { color: "from-primary/80 to-secondary/80" },
-    { color: "from-secondary/70 to-gold/70" },
-    { color: "from-gold/80 to-primary/80" },
-    { color: "from-primary/60 to-gold/60" },
-    { color: "from-secondary to-primary" },
-    { color: "from-gold/70 to-secondary/70" },
-    { color: "from-primary/50 to-secondary/50" },
-  ];
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  
+  // Ambil gambar yang dipilih dari array
+  const selectedImage = selectedImageIndex !== null ? galleryItems[selectedImageIndex] : null;
+
+  // --- Handling Loading/Error States ---
+  if (isLoading) {
+    return (
+        <section className="relative py-24 text-center text-foreground/70">
+            <p>Memuat Galeri Momen...</p>
+        </section>
+    );
+  }
+
+  if (error) {
+    return (
+        <section className="relative py-24 text-center text-destructive">
+            <p>Gagal memuat Galeri: {error}</p>
+        </section>
+    );
+  }
 
   return (
     <section className="relative py-24 overflow-hidden">
-      {/* Background */}
+      {/* Backgrounds... (Tetap sama) */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-10"
         style={{ backgroundImage: `url(${goldBokehOverlay})` }}
@@ -41,28 +54,43 @@ const GallerySection = () => {
           </p>
         </div>
         
+        {/* Tombol Tambah Foto (Hanya Admin) */}
+        {isAdmin && (
+            <div className="flex justify-center mb-8">
+                <button 
+                    // Nanti bisa diganti dengan modal upload
+                    onClick={() => alert('Buka Modal Upload Foto Supabase')} 
+                    className="flex items-center gap-2 bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-2 rounded-full transition-all glow-gold"
+                >
+                    <PlusCircle className="w-4 h-4" /> Tambah Foto Galeri
+                </button>
+            </div>
+        )}
+        
         {/* Gallery Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {galleryItems.map((item, index) => (
             <div
-              key={index}
+              key={item.id} // Menggunakan ID dari Supabase sebagai key
               className="group cursor-pointer animate-fade-in"
               style={{ animationDelay: `${index * 0.05}s` }}
-              onClick={() => setSelectedImage(index)}
+              onClick={() => setSelectedImageIndex(index)}
             >
               <div className="relative aspect-square overflow-hidden rounded-xl border-2 border-gold/30 group-hover:border-gold/60 transition-all duration-300">
-                {/* Gradient Background */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.color}`} />
                 
-                {/* Gold Frame Effect */}
+                {/* Gambar LIVE dari Supabase */}
+                <img 
+                    src={item.src} 
+                    alt={`Galeri Momen ${index + 1}`} 
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                />
+                
+                {/* Gold Frame Effect & Overlay on Hover (tetap sama) */}
                 <div className="absolute inset-0 border-4 border-gold/20 group-hover:border-gold/40 transition-all duration-300" />
-                
-                {/* Overlay on Hover */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <span className="text-gold text-sm">View</span>
                 </div>
-                
-                {/* Glow Effect */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 glow-gold" />
               </div>
             </div>
@@ -70,21 +98,28 @@ const GallerySection = () => {
         </div>
       </div>
       
-      {/* Lightbox Modal */}
+      {/* Lightbox Modal (Diperbarui untuk Gambar Live) */}
       {selectedImage !== null && (
         <div 
           className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6"
-          onClick={() => setSelectedImage(null)}
+          onClick={() => setSelectedImageIndex(null)}
         >
           <button
             className="absolute top-6 right-6 p-2 bg-gold/20 rounded-full hover:bg-gold/30 transition-colors"
-            onClick={() => setSelectedImage(null)}
+            onClick={() => setSelectedImageIndex(null)}
           >
             <X className="w-8 h-8 text-gold" />
           </button>
           
-          <div className="relative max-w-4xl w-full aspect-square">
-            <div className={`w-full h-full bg-gradient-to-br ${galleryItems[selectedImage].color} rounded-2xl border-4 border-gold/50 elegant-shadow`} />
+          <div 
+            className="relative max-w-4xl w-full h-full md:h-auto" 
+            onClick={(e) => e.stopPropagation()} // Mencegah klik di dalam modal menutupnya
+          >
+            <img 
+                src={selectedImage.src} 
+                alt={`Galeri Momen ${selectedImageIndex + 1}`} 
+                className="max-w-full max-h-full object-contain rounded-2xl border-4 border-gold/50 elegant-shadow mx-auto"
+            />
           </div>
         </div>
       )}

@@ -5,7 +5,7 @@ import { Volume2, VolumeX, Loader } from 'lucide-react'; // Ikon untuk kontrol v
 
 // GANTI DENGAN PATH FILE MUSIK ANDA!
 // Contoh: tempatkan file .mp3 Anda di folder public, misalnya: /public/music/wedding-song.mp3
-const MUSIC_FILE_PATH = "/music/wedding-song.mp3"; 
+const MUSIC_FILE_PATH = "/music/aku memilihmu.mp3"; 
 
 const MusicPlayer: React.FC = () => {
     // State untuk mengontrol pemutaran dan status loading
