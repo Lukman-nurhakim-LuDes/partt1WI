@@ -1,15 +1,17 @@
-// src/lib/supabase.ts (Perbaikan Final)
+// src/lib/supabase.ts (VERSI KOREKSI AKHIR)
 
 import { createClient } from '@supabase/supabase-js';
 
-// Pastikan Anda membaca variabel dan menyediakan string kosong jika hilang
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''; 
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLIC_KEY || ''; 
+// Pastikan Anda membaca variabel dan menemukan string kosong jika hilang
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+
+// PERBAIKAN DI SINI: Ubah nama variabel agar sesuai dengan .env Anda
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''; 
 
 // Cek keamanan dan lemparkan error yang lebih jelas
 if (!supabaseUrl || !supabaseAnonKey) {
-    // Ini akan menampilkan pesan error yang lebih informatif di konsol
-    throw new Error("Supabase URL and/or Public Key are missing. Please check your .env file!");
+  // Tambahkan logging yang lebih informatif di konsol
+  throw new Error("Supabase URL and/or Public key are missing. Please check your .env file!");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
