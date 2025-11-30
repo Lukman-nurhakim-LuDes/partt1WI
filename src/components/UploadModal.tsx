@@ -1,153 +1,137 @@
-// src/components/UploadModal.tsx
-
 import React, { useState } from 'react';
-import { X, Upload, Image } from 'lucide-react';
-import { useUploadPhoto } from '@/hooks/useUploadPhoto'; // Tidak digunakan di sini, tapi di PhotoStorySection
+import { X, UploadCloud } from 'lucide-react';
+// Asumsi: Anda menggunakan komponen Button dari direktori ini
+// Jika error tetap ada, pastikan path './ui/button' sudah benar.
+import { Button } from '@/components/ui/button'; 
 
-// Props untuk komponen modal
 interface UploadModalProps {
     onClose: () => void;
-    // Menerima fungsi upload dari hook yang memanggil
+    // Fungsi upload yang menerima File dan data teks
     uploadFunction: (file: File, caption?: string, description?: string) => Promise<any>; 
     onUploadSuccess: () => void;
-    section: 'story' | 'gallery'; // Prop untuk label/konteks
+    section: 'story' | 'gallery';
+    onDataRefresh: () => void; // <-- PROP KRITIS UNTUK REFRESH INSTAN
 }
 
-const UploadModal: React.FC<UploadModalProps> = ({ onClose, uploadFunction, onUploadSuccess, section }) => {
+const UploadModal: React.FC<UploadModalProps> = ({ onClose, uploadFunction, onUploadSuccess, section, onDataRefresh }) => {
     
-    const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [caption, setCaption] = useState('');
+    const [description, setDescription] = useState('');
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadError, setUploadError] = useState<string | null>(null);
-    const [caption, setCaption] = useState(''); // State untuk caption (metadata)
-    
+    const [error, setError] = useState<string | null>(null);
 
-    // --- Handling Input File ---
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUploadError(null);
         if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0];
-            if (!file.type.startsWith('image/')) {
-                setUploadError("Format file tidak didukung. Harap unggah file gambar.");
-                setFileToUpload(null);
-                return;
-            }
-            setFileToUpload(file);
-        } else {
-            setFileToUpload(null);
+            setFile(e.target.files[0]);
+            setError(null);
         }
     };
 
-    // --- Handling Submission ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!fileToUpload) {
-            setUploadError("Silakan pilih file untuk diunggah.");
+        if (!file) {
+            setError("Harap pilih file gambar terlebih dahulu.");
             return;
         }
 
         setIsUploading(true);
-        setUploadError(null);
+        setError(null);
 
         try {
-            // Panggil fungsi upload yang dilewatkan dari parent
-            await uploadFunction(fileToUpload, caption); // Melewatkan caption
-            onUploadSuccess();
+            await uploadFunction(file, caption, description);
+            
+            // --- PERBAIKAN KRITIS: Panggil fungsi refresh di sini ---
+            onDataRefresh(); // Memperbarui data di hook parent
+            // -----------------------------------------------------
+
+            onUploadSuccess(); // Menutup modal
+            
         } catch (err: any) {
             console.error("Upload failed:", err);
-            setUploadError(err.message || "Gagal mengunggah foto. Cek konsol.");
+            setError(`Gagal mengupload: ${err.message || "Terjadi kesalahan server."}`);
         } finally {
             setIsUploading(false);
         }
     };
 
     return (
-        // Modal Overlay
-        <div 
-            className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 transition-opacity duration-300"
-            onClick={onClose}
-        >
-            {/* Modal Content */}
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div 
-                className="bg-background border border-gold/30 rounded-xl max-w-lg w-full p-8 shadow-2xl relative animate-zoom-in"
-                onClick={(e) => e.stopPropagation()} 
+                className="bg-background rounded-lg p-6 w-full max-w-md shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()} // Mencegah klik di modal menutupnya
             >
-                <button
-                    className="absolute top-4 right-4 text-gold hover:text-white transition-colors"
-                    onClick={onClose}
-                    disabled={isUploading}
+                <button 
+                    onClick={onClose} 
+                    className="absolute top-4 right-4 text-foreground/50 hover:text-foreground"
                 >
                     <X className="w-6 h-6" />
                 </button>
+                
+                <h2 className="text-2xl font-bold text-gold mb-6 font-['Playfair_Display']">
+                    {section === 'story' ? "Tambah Foto Cerita" : "Tambah Foto Galeri"}
+                </h2>
 
-                <div className="text-center space-y-2 mb-6">
-                    <Image className="w-10 h-10 text-gold mx-auto" />
-                    <h3 className="text-2xl font-bold text-gold">Unggah Foto {section === 'story' ? 'Cerita' : 'Galeri'}</h3>
-                    <p className="text-sm text-foreground/70">Tambahkan gambar baru ke bagian {section}.</p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     
                     {/* Input File */}
-                    <label className="block">
-                        <span className="text-sm text-gold block mb-1">Pilih File Gambar *</span>
-                        <input 
-                            type="file" 
+                    <label className="block text-foreground/70 mb-2">Pilih Foto:</label>
+                    <div className="border border-gold/30 p-4 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gold/60 transition-colors">
+                        <input
+                            type="file"
                             accept="image/*"
-                            onChange={handleFileChange} 
-                            className="block w-full text-sm text-foreground/80
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-gold/20 file:text-gold
-                                hover:file:bg-gold/30 transition-colors"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            id="file-upload"
                             disabled={isUploading}
                         />
-                    </label>
-                    
-                    {/* Input Caption (Berguna untuk Storytelling) */}
-                    <label className="block">
-                        <span className="text-sm text-gold block mb-1">Caption / Judul Singkat</span>
-                        <input 
-                            type="text" 
-                            value={caption}
-                            onChange={(e) => setCaption(e.target.value)}
-                            placeholder="Contoh: Saat Lamaran"
-                            className="w-full p-2 bg-background border border-gold/30 rounded-md text-foreground"
-                            disabled={isUploading}
-                        />
-                    </label>
+                        <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
+                            <UploadCloud className="w-8 h-8 text-gold mb-2" />
+                            <span className="text-sm text-foreground/80">
+                                {file ? file.name : "Klik untuk memilih file"}
+                            </span>
+                        </label>
+                    </div>
 
+                    {/* Input Caption (Hanya untuk Story) */}
+                    {section === 'story' && (
+                        <>
+                            <div>
+                                <label htmlFor="caption" className="block text-foreground/70 mb-1">Caption/Judul (Opsional):</label>
+                                <input
+                                    type="text"
+                                    id="caption"
+                                    value={caption}
+                                    onChange={(e) => setCaption(e.target.value)}
+                                    className="w-full p-2 border border-foreground/20 rounded bg-transparent text-foreground"
+                                    disabled={isUploading}
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="description" className="block text-foreground/70 mb-1">Deskripsi (Opsional):</label>
+                                <textarea
+                                    id="description"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="w-full p-2 border border-foreground/20 rounded bg-transparent text-foreground"
+                                    rows={3}
+                                    disabled={isUploading}
+                                />
+                            </div>
+                        </>
+                    )}
 
-                    {/* Pratinjau File yang Dipilih */}
-                    {fileToUpload && (
-                        <div className="text-sm text-foreground/90 flex items-center gap-2 p-3 bg-gold/10 rounded-lg">
-                            <Image className="w-4 h-4 text-gold" />
-                            File siap unggah: <span className="font-medium truncate">{fileToUpload.name}</span>
-                        </div>
+                    {error && (
+                        <p className="text-sm text-destructive mt-2">{error}</p>
                     )}
-                    
-                    {/* Pesan Error */}
-                    {uploadError && (
-                        <p className="text-sm text-destructive bg-destructive/10 p-2 rounded-lg">{uploadError}</p>
-                    )}
-                    
-                    {/* Tombol Unggah */}
-                    <button
-                        type="submit"
-                        disabled={!fileToUpload || isUploading}
-                        className="w-full flex items-center justify-center gap-2 bg-gold text-black px-4 py-2 rounded-lg font-semibold hover:bg-gold/80 transition-colors disabled:opacity-50"
+
+                    <Button 
+                        type="submit" 
+                        className="w-full bg-gold hover:bg-gold/80 text-black font-semibold"
+                        disabled={isUploading || !file}
                     >
-                        {isUploading ? (
-                            <>
-                                <span className="animate-spin h-5 w-5 border-t-2 border-b-2 border-black rounded-full"></span>
-                                Mengunggah...
-                            </>
-                        ) : (
-                            <>
-                                <Upload className="w-5 h-5" /> Unggah Foto
-                            </>
-                        )}
-                    </button>
+                        {isUploading ? 'Mengunggah...' : `Upload ke ${section === 'story' ? 'Cerita' : 'Galeri'}`}
+                    </Button>
                 </form>
             </div>
         </div>

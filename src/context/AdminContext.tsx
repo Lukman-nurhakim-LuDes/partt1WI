@@ -1,7 +1,5 @@
-// src/context/AdminContext.tsx
-
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase'; 
+import { supabase } from '@/lib/supabase'; // Pastikan path ke klien Supabase Anda benar
 
 // --- Interfaces ---
 interface AdminContextType {
@@ -14,6 +12,7 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 // Ambil variables dari ENV
+// Catatan: Pastikan key VITE_ADMIN_EMAIL dan VITE_ADMIN_PASSWORD ada di file .env Anda.
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'lukmannrhkm80@gmail.com'; 
 const ADMIN_PASSWORD_LOCAL = import.meta.env.VITE_ADMIN_PASSWORD || 'Lukmannr24'; 
 
@@ -37,6 +36,10 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAdmin(true);
+      } else if (saved === 'true') {
+         // Jika localStorage aktif tetapi sesi Supabase hilang, matikan mode Admin
+         setIsAdmin(false);
+         localStorage.removeItem('isAdminMode');
       }
     });
   }, []);
@@ -51,6 +54,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     
     // 1. Cek Password Lokal (Gate Cepat)
     if (password !== ADMIN_PASSWORD_LOCAL) {
+      console.warn("Login attempt failed: Local password mismatch.");
       return false;
     }
     
@@ -61,7 +65,10 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
             password: password,
         });
 
-        if (error) throw error;
+        if (error) {
+           console.error("Supabase Login Error:", error.message);
+           throw error; // Lemparkan error agar ditangkap di block catch
+        }
 
         // 3. Jika Sukses
         if (data.session) {
@@ -72,15 +79,20 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         return false;
 
     } catch (error: any) {
-        console.error("Supabase Login Error:", error.message);
+        console.error("Login failed:", error.message || "Unknown error during Supabase sign-in.");
         return false;
     }
     
   }, [ADMIN_EMAIL, ADMIN_PASSWORD_LOCAL]);
 
   const logoutAdmin = useCallback(async () => {
-    await supabase.auth.signOut();
-    setIsAdmin(false);
+    try {
+        await supabase.auth.signOut();
+        setIsAdmin(false);
+        console.log("Logged out successfully.");
+    } catch (error) {
+        console.error("Logout error:", error);
+    }
   }, []);
 
   return (

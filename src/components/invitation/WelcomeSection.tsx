@@ -1,22 +1,31 @@
-// src/components/invitation/WelcomeSection.tsx (Versi Diperbarui)
-
-import { useState } from "react"; // Tambahkan useState
-import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg";
-import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
-import EditableText from "@/components/EditableText"; // Import komponen editing
+import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg"; // Path dipertahankan
+import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg"; // Path dipertahankan
+import EditableText from "@/components/EditableText";
+import useContent from "@/hooks/useContent"; // Import hook baru
 
 const WelcomeSection = () => {
-    // --- STATE UNTUK DATA EDITABLE ---
-    const [title, setTitle] = useState("Selamat Datang");
-    const [description, setDescription] = useState("Dengan penuh kebahagiaan dan kehormatan, kami mengundang Anda untuk berbagi momen istimewa bersama kami dalam perayaan yang penuh keajaiban dan keanggunan.");
-    const [quote, setQuote] = useState("Setiap momen berharga dimulai dengan undangan untuk bersama");
+    // --- MENGAMBIL DATA DARI SUPABASE ---
+    const { content, isLoading, updateContent } = useContent();
 
-    // Fungsi untuk menyimpan perubahan pada field spesifik
-    const handleSave = (setter: React.Dispatch<React.SetStateAction<string>>, fieldName: string) => (newContent: string) => {
-        setter(newContent);
-        console.log(`[WELCOME SECTION] Field ${fieldName} diupdate: ${newContent}`);
-        // Logic Nyata: updateSupabase('welcome_section', { field: fieldName, content: newContent });
+    // Nilai default jika data belum dimuat atau kosong
+    const title = content.title || "Selamat Datang";
+    const description = content.description || "Dengan penuh kebahagiaan dan kehormatan, kami mengundang Anda untuk berbagi momen istimewa bersama kami dalam perayaan yang penuh keajaiban dan keanggunan.";
+    const quote = content.quote || "Setiap momen berharga dimulai dengan undangan untuk bersama";
+
+    // Fungsi untuk menyimpan perubahan, kini memanggil updateContent
+    const handleSave = (fieldName: string) => async (newContent: string) => {
+        console.log(`[WELCOME SECTION] Memperbarui field ${fieldName} ke: ${newContent}`);
+        await updateContent(fieldName, newContent);
     };
+    
+    // Tampilkan loading state jika data belum siap
+    if (isLoading) {
+        return (
+            <section className="min-h-screen flex items-center justify-center bg-black">
+                <p className="text-gold text-xl animate-pulse">Memuat Konten...</p>
+            </section>
+        );
+    }
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -38,26 +47,27 @@ const WelcomeSection = () => {
                 <div className="space-y-4">
                     <h2 className="text-5xl md:text-7xl font-bold text-gold">
                         {/* 1. EDITABLE TEXT: Judul Utama */}
-                        <EditableText onSave={handleSave(setTitle, 'title')} tagName="span">
+                        {/* onSave sekarang memanggil handleSave langsung dengan field name */}
+                        <EditableText onSave={handleSave('title')} tagName="span">
                             {title}
                         </EditableText>
                     </h2>
                     <div className="h-1 w-32 bg-gold/50 mx-auto" />
                 </div>
                 
-                <p className="text-xl md:text-2xl text-foreground/90 leading-relaxed max-w-2xl mx-auto">
+                <div className="text-xl md:text-2xl text-foreground/90 leading-relaxed max-w-2xl mx-auto">
                     {/* 2. EDITABLE TEXT: Deskripsi Sambutan */}
-                    <EditableText onSave={handleSave(setDescription, 'description')} tagName="span">
+                    <EditableText onSave={handleSave('description')} tagName="span">
                         {description}
                     </EditableText>
-                </p>
+                </div>
                 
-                <p className="text-lg md:text-xl text-gold/80 italic">
+                <div className="text-lg md:text-xl text-gold/80 italic">
                     {/* 3. EDITABLE TEXT: Kutipan */}
-                    <EditableText onSave={handleSave(setQuote, 'quote')} tagName="span">
+                    <EditableText onSave={handleSave('quote')} tagName="span">
                         "{quote}"
                     </EditableText>
-                </p>
+                </div>
                 
                 {/* Decorative Elements */}
                 <div className="flex items-center justify-center gap-4 pt-8">

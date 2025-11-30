@@ -1,73 +1,75 @@
 // src/hooks/useFetchGallery.ts
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase'; // Sesuaikan path
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase'; 
 
-interface GalleryItem {
-  id: number;
-  src: string; // URL Publik foto
-  order_index: number; 
+// --- Interfaces dan Tipe ---
+interface Photo {
+    id: number;
+    src: string;
+    order_index: number; 
+    section: 'gallery';
 }
 
-// PERBAIKAN: Tambahkan uploadGalleryPhoto ke Interface Hasil Hook
 interface UseGalleryResult {
-  photos: GalleryItem[];
-  isLoading: boolean;
-  error: string | null;
-  // Tambahkan definisi tipe fungsi di sini
-  uploadGalleryPhoto: (file: File) => Promise<void>; 
+    photos: Photo[] | null;
+    isLoading: boolean;
+    error: string | null;
+    deleteGalleryPhoto: (id: number, src: string) => Promise<void>; 
+    refreshPhotos: () => void; // Fungsi baru untuk refresh tanpa reload
 }
 
-export default function useFetchGallery(): UseGalleryResult { 
-    
-    const [photos, setPhotos] = useState<GalleryItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true); 
+// --- Hook Utama ---
+export default function useFetchGallery(): UseGalleryResult {
+    const [photos, setPhotos] = useState<Photo[] | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // --- FUNGSI FETCH DATA (Tetap sama) ---
-    useEffect(() => {
-        const fetchGallery = async () => {
-            setIsLoading(true);
-            try {
-                const { data, error } = await supabase
-                    .from('dynamic_photos') 
-                    .select('id, src, order_index')
-                    .eq('section', 'gallery') 
-                    .order('order_index', { ascending: true }); 
+    // FUNGSI FETCH UTAMA
+    const fetchPhotos = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('dynamic_photos')
+                .select('id, src, order_index, section') 
+                .eq('section', 'gallery') 
+                .order('order_index', { ascending: true }); 
 
-                if (error) throw error;
+            if (error) throw error;
 
-                const formattedData: GalleryItem[] = data.map(item => ({
-                    id: item.id,
-                    src: item.src,
-                    order_index: item.order_index || 0,
-                }));
-                
-                setPhotos(formattedData);
-                setError(null);
-
-            } catch (err: any) {
-                console.error("Error fetching gallery:", err.message);
-                setError("Gagal memuat galeri: " + err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        
-        fetchGallery();
+            setPhotos(data as Photo[]);
+            setError(null);
+        } catch (err: any) {
+             console.error("Gagal memuat galeri:", err.message);
+             setError(`Gagal memuat galeri: ${err.message}.`);
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
 
+    useEffect(() => {
+        fetchPhotos();
+    }, [fetchPhotos]);
+    
+    // FUNGSI REFRESH: Hanya memanggil ulang fetchPhotos
+    const refreshPhotos = () => {
+        fetchPhotos();
+    };
 
-    // --- FUNGSI UPLOAD GALLERY PHOTO (Implementasi) ---
-    const uploadGalleryPhoto = async (file: File): Promise<void> => {
-        // Implementasi nyata upload ke Supabase Storage (yang kita bahas sebelumnya)
-        console.log("Mencoba mengunggah file:", file.name);
-
-        // ... (Logic Supabase Storage dan Insert ke DB di sini) ...
-        alert(`Simulasi upload berhasil untuk: ${file.name}`);
+    // --- FUNGSI HAPUS FOTO GALERI (dipertahankan agar lengkap) ---
+    const deleteGalleryPhoto = async (id: number, src: string) => {
+        try {
+            const filePath = src.split('wedding_assets/')[1];
+            await supabase.storage.from('wedding_assets').remove([filePath]);
+            await supabase.from('dynamic_photos').delete().eq('id', id);
+            setPhotos(prevPhotos => prevPhotos ? prevPhotos.filter(photo => photo.id !== id) : null);
+            
+        } catch (err: any) {
+            console.error("Gagal menghapus foto galeri:", err.message);
+            throw new Error("Gagal menghapus foto: " + err.message);
+        }
     };
 
 
-    // PERBAIKAN FINAL: Sertakan uploadGalleryPhoto dalam objek return
-    return { photos, isLoading, error, uploadGalleryPhoto };
+    return { photos, isLoading, error, deleteGalleryPhoto, refreshPhotos };
 }
