@@ -1,4 +1,4 @@
-import React, { useState, useRef, ReactNode, ElementType } from 'react';
+import React, { useState, useRef, ReactNode, ElementType, useEffect } from 'react'; // Import useEffect
 import { useAdmin } from '@/context/AdminContext'; 
 import { Edit } from 'lucide-react';
 
@@ -20,12 +20,22 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
   // Perubahan di sini: Menggunakan type casting untuk memastikan Tag dikenali sebagai komponen React yang valid
   const Tag = tagName as ElementType;
 
+  // --- LOGIKA BARU: OTOMATIS FOCUS SAAT MODE EDIT AKTIF ---
+  useEffect(() => {
+    if (isEditing && contentRef.current) {
+      // Pindahkan focus ke elemen agar pengguna dapat langsung mengetik
+      contentRef.current.focus();
+    }
+  }, [isEditing]);
+  // --------------------------------------------------------
+
   const handleBlur = () => {
     // Memastikan ref ada dan pengguna adalah Admin sebelum menyimpan
+    // Panggil onSave hanya jika isAdmin benar
     if (contentRef.current && isAdmin) {
       const newContent = contentRef.current.innerText.trim();
       onSave(newContent); 
-      setIsEditing(false);
+      setIsEditing(false); // Keluar dari mode editing setelah blur
     }
   };
 
@@ -40,7 +50,6 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
   // Tampilan dasar saat tidak di mode Admin
   // Di sini Tag akan berfungsi sebagai elemen HTML biasa (span, p, h1, dsb.)
   if (!isAdmin) {
-    // Catatan: Anda dapat menggunakan <Tag as="span" /> jika Anda menggunakan styled-components atau library serupa.
     // Karena ini menggunakan dynamic JSX element, syntax ini sudah benar.
     return <Tag className={className}>{children}</Tag>;
   }
@@ -54,17 +63,18 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
         ref={contentRef as any}
         
         // 2. contentEditable diketik secara eksplisit
-        // Menggunakan string "true" atau "false"
+        // Menggunakan string "true" atau "false". Hanya true saat isEditing.
         contentEditable={isAdmin && isEditing ? "true" : "false"}
         
-        // 3. Properti Event: Menghapus "as any" yang tidak perlu
-        // Tipe sudah diinferensi dengan benar melalui ref dan React.KeyboardEvent
+        // 3. Properti Event: Panggil handleBlur dan handleKeyPress
         onBlur={handleBlur}
         onKeyDown={handleKeyPress}
         
-        // Sintaks ini sudah diperbaiki sebelumnya
+        // Mengaktifkan mode edit saat klik, hanya jika belum dalam mode edit
         onClick={() => {
-            if (isAdmin && !isEditing) setIsEditing(true);
+            // Kita tidak perlu kondisi !isEditing di sini, karena focus akan otomatis
+            // dipindahkan oleh useEffect di atas.
+            setIsEditing(true);
         }}
         
         // 4. Properti Lain
