@@ -1,32 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2 } from "lucide-react";
+// Hapus import Play, Pause, Volume2. Mereka tidak digunakan lagi di sini.
 import satinBerryBg from "@/assets/satin-berry-bg.jpg";
 import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
 
+// Import custom hook yang mengelola state musik global
+import useMusicPlayer from "@/hooks/useMusicPlayer"; // Sesuaikan path jika perlu
+
 const Landing = () => {
   const navigate = useNavigate();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(() => new Audio("/audio/background-music.mp3"));
+  // Ambil fungsi startMusic dari hook. Kita tidak butuh isPlaying atau togglePlay di halaman ini.
+  const { startMusic } = useMusicPlayer(); 
+  
+  // Hapus state [isPlaying] dan [audio] yang lama karena sudah dipindahkan ke hook
 
-  useEffect(() => {
-    audio.loop = true;
-    return () => {
-      audio.pause();
-    };
-  }, [audio]);
-
-  const toggleMusic = () => {
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
+  // Fungsi yang dipanggil saat tombol "Masuk" diklik
   const handleEnter = () => {
+    // 1. Panggil startMusic() dari hook: ini yang menginisiasi musik (dianggap interaksi user)
+    startMusic(); 
+    // 2. Navigasi ke halaman utama undangan
     navigate("/invitation");
   };
 
@@ -75,7 +68,7 @@ const Landing = () => {
           
           {/* CTA Button */}
           <Button
-            onClick={handleEnter}
+            onClick={handleEnter} // Pemicu musik dan navigasi
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-xl rounded-full glow-gold transition-all duration-500 hover:scale-105 elegant-shadow"
           >
@@ -83,18 +76,9 @@ const Landing = () => {
           </Button>
         </div>
         
-        {/* Music Control */}
-        <button
-          onClick={toggleMusic}
-          className="fixed bottom-8 right-8 p-4 bg-gold/20 backdrop-blur-sm rounded-full border border-gold/30 hover:bg-gold/30 transition-all duration-300 glow-gold"
-          aria-label="Toggle music"
-        >
-          {isPlaying ? (
-            <Pause className="w-6 h-6 text-gold" />
-          ) : (
-            <Play className="w-6 h-6 text-gold" />
-          )}
-        </button>
+        {/* HILANGKAN TOMBOL MUSIC CONTROL DARI SINI */}
+        {/* Tombol kontrol musik sekarang hanya ada di GlobalMusicControl.tsx */}
+        
       </div>
       
       {/* Sparkle Effects */}

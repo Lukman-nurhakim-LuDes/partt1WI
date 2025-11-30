@@ -1,5 +1,7 @@
 import { Clock } from "lucide-react";
 import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg";
+// 1. IMPORT KOMPONEN COUNTDOWN TIMER
+import CountdownTimer from "./CountdownTimer"; // Sesuaikan path jika berbeda
 
 const timelineEvents = [
   {
@@ -35,6 +37,10 @@ const timelineEvents = [
 ];
 
 const TimelineSection = () => {
+  // TENTUKAN TANGGAL DAN WAKTU PERNIKAHAN ANDA DI SINI!
+  // Format: 'YYYY-MM-DDTTHH:MM:SS'
+  const weddingTargetDate = "2026-06-15T19:00:00"; // GANTI DENGAN TANGGAL ACARA SEBENARNYA
+
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Emerald Satin Background Strip */}
@@ -47,6 +53,10 @@ const TimelineSection = () => {
       
       {/* Content */}
       <div className="relative z-10 max-w-5xl mx-auto px-6">
+        
+        {/* 2. PENEMPATAN COUNTDOWN TIMER */}
+        <CountdownTimer targetDate={weddingTargetDate} />
+        
         <div className="text-center space-y-4 mb-16 animate-slide-up">
           <h2 className="text-5xl md:text-6xl font-bold text-gold">
             Rundown Acara

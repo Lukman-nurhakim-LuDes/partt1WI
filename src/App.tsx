@@ -7,6 +7,9 @@ import Landing from "./pages/Landing";
 import Invitation from "./pages/Invitation";
 import NotFound from "./pages/NotFound";
 
+// 1. IMPORT KOMPONEN KONTROL MUSIK GLOBAL
+import GlobalMusicControl from "./components/invitation/GlobalMusicControl"; 
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -15,6 +18,10 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        {/* Kontrol Musik DITEMPATKAN di sini, di dalam BrowserRouter */}
+        {/* Ini memastikan kontrol selalu ada dan tidak di-unmount saat navigasi */}
+        <GlobalMusicControl /> 
+        
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/invitation" element={<Invitation />} />
