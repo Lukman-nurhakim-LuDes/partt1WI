@@ -2,7 +2,7 @@
 
 import { useState } from "react"; // Tambahkan useState
 import { Clock } from "lucide-react";
-import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg";
+import satinEmeraldBg from "@/assets/Bg-4.jpg";
 import CountdownTimer from "./CountdownTimer"; 
 import EditableText from "@/components/EditableText"; // Import komponen editing
 
@@ -54,7 +54,7 @@ interface TimelineEvent {
 }
 
 const TimelineSection = () => {
-  const weddingTargetDate = "2026-06-15T19:00:00"; 
+  const weddingTargetDate = "2026-09-15T19:00:00"; 
   
   // --- STATE UNTUK DATA EDITABLE ---
   const [sectionTitle, setSectionTitle] = useState("Rundown Acara");

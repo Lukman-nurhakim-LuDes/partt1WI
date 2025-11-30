@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 // Hapus import Play, Pause, Volume2. Mereka tidak digunakan lagi di sini.
-import satinBerryBg from "@/assets/satin-berry-bg.jpg";
+import satinBerryBg from "@/assets/Bg-3.jpg";
 import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
 
 // Import custom hooks
@@ -16,9 +16,9 @@ const Landing = () => {
   const { startMusic } = useMusicPlayer(); 
 
   // --- STATE UNTUK DATA EDITABLE ---
-  const [mainTitle, setMainTitle] = useState("Malam Keajaiban");
-  const [subTitle, setSubTitle] = useState("THE MIRACLE NIGHT");
-  const [dateText, setDateText] = useState("Sabtu, 15 Februari 2025");
+  const [mainTitle, setMainTitle] = useState("Lukman // Destry");
+  const [subTitle, setSubTitle] = useState("THE MIRACLE MORNING");
+  const [dateText, setDateText] = useState("Sabtu, 15 September 2026");
   const [venueText, setVenueText] = useState("Grand Ballroom • Jakarta");
 
   // Fungsi untuk menyimpan perubahan pada field spesifik

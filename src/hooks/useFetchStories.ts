@@ -1,87 +1,63 @@
-// src/hooks/useFetchStories.ts
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase'; // Sesuaikan path import
 
-import { useState, useEffect } from "react";
-import { supabase } from '@/lib/supabase'; 
-
+// Interface untuk Story Item
 interface StoryItem {
-    id: number;
-    src: string;
-    caption: string;
-    description: string;
-    delay: number;
+  id: number;
+  src: string; // URL gambar
+  caption: string;
+  description: string;
+  delay_number: number;
 }
 
-// PERBAIKAN: Tambahkan updateStoryText ke Interface Hasil Hook
+// Interface return hook
 interface UseStoriesResult {
-    stories: StoryItem[];
-    isLoading: boolean;
-    error: string | null;
-    updateStoryText: (id: number, field: 'caption' | 'description', newValue: string) => Promise<void>;
+  stories: StoryItem[];
+  isLoading: boolean;
+  error: string | null;
 }
 
-export default function useFetchStories(): UseStoriesResult { 
-    
-    const [stories, setStories] = useState<StoryItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true); 
-    const [error, setError] = useState<string | null>(null);
+export default function useFetchStories(): UseStoriesResult {
+  const [stories, setStories] = useState<StoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // --- FUNGSI FETCH DATA (Tidak Berubah) ---
-    useEffect(() => {
-        const fetchStories = async () => {
-            setIsLoading(true);
-            try {
-                // GANTI 'story_photos' dengan NAMA TABEL ANDA di Supabase
-                const { data, error } = await supabase
-                    .from('story_photos')
-                    .select('*')
-                    .order('delay', { ascending: true });
+  useEffect(() => {
+    const fetchStories = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // PERBAIKAN: Mengganti 'story_photos' menjadi 'dynamic_photos' dan menambahkan filter
+        const { data, error } = await supabase
+          .from('dynamic_photos') // <-- NAMA TABEL YANG BENAR
+          .select('id, src, caption, description, order_index')
+          .eq('section', 'story') // <-- FILTER: Ambil hanya data untuk Storytelling
+          .order('order_index', { ascending: true }); // Urutkan berdasarkan indeks urutan
 
-                if (error) throw error;
+        if (error) throw error;
 
-                setStories(data as StoryItem[]); 
-                setError(null);
-
-            } catch (err: any) {
-                console.error("Error fetching stories:", err.message);
-                setError(err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchStories();
-    }, []);
-
-    // --- FUNGSI UPDATE DATA BARU (Ditempatkan di dalam hook) ---
-    const updateStoryText = async (id: number, field: 'caption' | 'description', newValue: string) => {
-        try {
-            // Memastikan hanya admin yang bisa mengedit (Walaupun Auth Supabase lebih aman)
-            if (!newValue.trim()) {
-                throw new Error("Konten tidak boleh kosong.");
-            }
-            
-            const { error } = await supabase
-                .from('story_photos')
-                .update({ [field]: newValue })
-                .eq('id', id);
-
-            if (error) throw error;
-            
-            // Perbarui state lokal secara instan (Optimistic Update)
-            setStories(prevStories => 
-                prevStories.map(story => 
-                    story.id === id ? { ...story, [field]: newValue } : story
-                )
-            );
-            
-            console.log(`Update berhasil untuk ID ${id}, Field: ${field}`);
-
-        } catch (err: any) {
-            console.error("Gagal menyimpan perubahan ke Supabase:", err.message);
-            throw err;
-        }
+        // Map data Supabase ke interface StoryItem
+        const formattedData: StoryItem[] = data.map(item => ({
+            id: item.id,
+            src: item.src,
+            caption: item.caption || '',
+            description: item.description || '',
+            delay_number: item.order_index || 0, // Menggunakan order_index
+        }));
+        
+        setStories(formattedData);
+        
+      } catch (err: any) {
+        console.error("Error fetching stories:", err.message);
+        // Memberikan pesan error yang jelas jika gagal
+        setError("Gagal memuat cerita: " + err.message); 
+      } finally {
+        setIsLoading(false);
+      }
     };
+    
+    fetchStories();
+  }, []);
 
-    // PERBAIKAN FINAL: Pastikan fungsi updateStoryText dikembalikan
-    return { stories, isLoading, error, updateStoryText };
+  return { stories, isLoading, error };
 }
