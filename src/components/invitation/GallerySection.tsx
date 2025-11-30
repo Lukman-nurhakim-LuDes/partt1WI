@@ -4,6 +4,9 @@ import { useState } from "react";
 import { X, PlusCircle } from "lucide-react";
 import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
 
+// Import komponen baru
+import UploadModal from "@/components/UploadModal"; 
+
 // Import Hooks & Context
 import useFetchGallery from "@/hooks/useFetchGallery"; 
 import { useAdmin } from "@/context/AdminContext"; 
@@ -11,19 +14,22 @@ import { useAdmin } from "@/context/AdminContext";
 // Interface dasar untuk Gallery Item (sesuai hook)
 interface GalleryItem {
   id: number;
-  src: string;
+  src: string; // URL gambar
   order_index: number;
 }
 
 
 const GallerySection = () => {
-  const { photos, isLoading, error, uploadGalleryPhoto } = useFetchGallery(); // Menggunakan 'photos' sesuai hook
+  // Destructure hook, sekarang dengan uploadGalleryPhoto
+  const { photos, isLoading, error, uploadGalleryPhoto } = useFetchGallery(); 
   const { isAdmin } = useAdmin(); 
   
-  // Menggunakan index array untuk melacak gambar yang dipilih
+  // STATE BARU: Kontrol untuk Modal Upload
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  
+  // STATE LAMA: Kontrol untuk Lightbox
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   
-  // Mengambil gambar yang dipilih dari array 'photos'
   const selectedImage = selectedImageIndex !== null ? photos[selectedImageIndex] : null;
 
   // --- Handling Loading/Error States ---
@@ -43,18 +49,11 @@ const GallerySection = () => {
     );
   }
 
-  // --- Handling Upload Logic (Placeholder) ---
+  // --- Handling Tombol Upload ---
   const handleUploadClick = () => {
       if (isAdmin) {
-          // Logic nyata: Memicu modal atau input file
-          alert('Admin Mode: Buka Modal Upload Foto Supabase');
-          // const fileInput = document.createElement('input');
-          // fileInput.type = 'file';
-          // fileInput.accept = 'image/*';
-          // fileInput.onchange = (e) => {
-          //    if (e.target.files) uploadGalleryPhoto(e.target.files[0]);
-          // };
-          // fileInput.click();
+          // GANTI: Membuka modal
+          setIsUploadModalOpen(true);
       }
   };
 
@@ -96,7 +95,7 @@ const GallerySection = () => {
         {/* Gallery Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           
-          {/* === PERBAIKAN UTAMA: Pemeriksaan Kondisional photos && === */}
+          {/* PEMERIKSAAN KONDISIONAL photos && */}
           {photos && photos.map((item, index) => (
             <div
               key={item.id} 
@@ -132,7 +131,16 @@ const GallerySection = () => {
         </div>
       </div>
       
-      {/* Lightbox Modal */}
+      {/* MODAL UPLOAD BARU */}
+      {isUploadModalOpen && (
+        <UploadModal 
+            onClose={() => setIsUploadModalOpen(false)} 
+            // Ketika upload sukses, modal ditutup dan galeri akan auto-refresh
+            onUploadSuccess={() => setIsUploadModalOpen(false)} 
+        />
+      )}
+
+      {/* Lightbox Modal (Tetap Sama) */}
       {selectedImage !== null && (
         <div 
           className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6"
