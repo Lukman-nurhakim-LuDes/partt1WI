@@ -3,31 +3,25 @@
 import { useState } from "react";
 import { X, PlusCircle } from "lucide-react";
 import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg";
-
-// Import komponen baru
-import UploadModal from "@/components/UploadModal"; 
-
-// Import Hooks & Context
 import useFetchGallery from "@/hooks/useFetchGallery"; 
 import { useAdmin } from "@/context/AdminContext"; 
+import { useUploadPhoto } from "@/hooks/useUploadPhoto";
+import UploadModal from "@/components/UploadModal"; 
 
-// Interface dasar untuk Gallery Item (sesuai hook)
+// Interface dasar untuk Gallery Item
 interface GalleryItem {
   id: number;
-  src: string; // URL gambar
+  src: string;
   order_index: number;
 }
 
 
 const GallerySection = () => {
-  // Destructure hook, sekarang dengan uploadGalleryPhoto
   const { photos, isLoading, error, uploadGalleryPhoto } = useFetchGallery(); 
+  const { uploadAndInsertPhoto } = useUploadPhoto('gallery');
   const { isAdmin } = useAdmin(); 
   
-  // STATE BARU: Kontrol untuk Modal Upload
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  
-  // STATE LAMA: Kontrol untuk Lightbox
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   
   const selectedImage = selectedImageIndex !== null ? photos[selectedImageIndex] : null;
@@ -49,10 +43,9 @@ const GallerySection = () => {
     );
   }
 
-  // --- Handling Tombol Upload ---
+  // --- Handling Tombol Upload UI ---
   const handleUploadClick = () => {
       if (isAdmin) {
-          // GANTI: Membuka modal
           setIsUploadModalOpen(true);
       }
   };
@@ -95,8 +88,8 @@ const GallerySection = () => {
         {/* Gallery Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           
-          {/* PEMERIKSAAN KONDISIONAL photos && */}
           {photos && photos.map((item, index) => (
+            // PASTIKAN SETIAP ITEM DI MAP MEMILIKI DIV TUNGGAL SEBAGAI ROOT
             <div
               key={item.id} 
               className="group cursor-pointer animate-fade-in"
@@ -135,12 +128,13 @@ const GallerySection = () => {
       {isUploadModalOpen && (
         <UploadModal 
             onClose={() => setIsUploadModalOpen(false)} 
-            // Ketika upload sukses, modal ditutup dan galeri akan auto-refresh
+            section="gallery" 
+            uploadFunction={uploadAndInsertPhoto} 
             onUploadSuccess={() => setIsUploadModalOpen(false)} 
         />
       )}
 
-      {/* Lightbox Modal (Tetap Sama) */}
+      {/* Lightbox Modal */}
       {selectedImage !== null && (
         <div 
           className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6"

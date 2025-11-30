@@ -1,12 +1,11 @@
-// src/context/AdminContext.tsx (VERSI FINAL BEBAS ERROR)
+// src/context/AdminContext.tsx
 
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase'; // Sesuaikan path import
+import { supabase } from '@/lib/supabase'; 
 
-// --- 1. Interfaces ---
+// --- Interfaces ---
 interface AdminContextType {
   isAdmin: boolean;
-  // PERBAIKAN: Tipe return harus Promise<boolean> karena fungsi ini async
   loginAdmin: (password: string) => Promise<boolean>; 
   logoutAdmin: () => void;
 }
@@ -14,11 +13,11 @@ interface AdminContextType {
 // --- Context ---
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-// GANTI EMAIL INI dengan email admin Anda yang Anda daftarkan di Supabase Auth
+// Ambil variables dari ENV
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'lukmannrhkm80@gmail.com'; 
 const ADMIN_PASSWORD_LOCAL = import.meta.env.VITE_ADMIN_PASSWORD || 'Lukmannr24'; 
 
-// --- 2. Component Provider ---
+// --- Provider Component ---
 interface AdminProviderProps {
   children: ReactNode;
 }
@@ -34,7 +33,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         setIsAdmin(true); 
     }
     
-    // 2. Verifikasi sesi Supabase
+    // 2. Verifikasi sesi Supabase saat start
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAdmin(true);
@@ -47,8 +46,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     localStorage.setItem('isAdminMode', isAdmin.toString());
   }, [isAdmin]);
 
-  // --- 3. FUNGSI LOGIN ADMIN ASINKRONUS (Perbaikan Utama) ---
-  // PERBAIKAN: Menggunakan async di dalam useCallback
+  // --- FUNGSI LOGIN ADMIN ASINKRONUS ---
   const loginAdmin = useCallback(async (password: string): Promise<boolean> => {
     
     // 1. Cek Password Lokal (Gate Cepat)
@@ -75,13 +73,11 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
     } catch (error: any) {
         console.error("Supabase Login Error:", error.message);
-        // Jika login gagal karena alasan apapun, tolak akses
         return false;
     }
     
   }, [ADMIN_EMAIL, ADMIN_PASSWORD_LOCAL]);
 
-  // --- 4. FUNGSI LOGOUT ADMIN ---
   const logoutAdmin = useCallback(async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
@@ -94,7 +90,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
   );
 };
 
-// --- 5. Custom Hook ---
+// --- Custom Hook ---
 export const useAdmin = () => {
   const context = useContext(AdminContext);
   if (context === undefined) {
