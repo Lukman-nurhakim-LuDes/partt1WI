@@ -1,15 +1,20 @@
-// src/hooks/useContent.ts
+// src/hooks/useContent.ts (Versi Final Bebas Error Supabase SDK)
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client'; // LOKASI YANG BENAR
+import { supabase } from '@/integrations/supabase/client'; 
+import type { Json, Tables, TablesInsert } from '@/integrations/supabase/types'; 
 
-// Interface untuk data content yang tersimpan dalam format JSON
+// --- Type Safety ---
 interface ContentData {
     title: string;
     description: string;
     quote: string;
-    [key: string]: string; // Memungkinkan properti lain
+    [key: string]: string; 
 }
+// Type untuk baris dari tabel editable_content
+type EditableContentRow = Tables<'editable_content'>;
+type EditableContentInsert = TablesInsert<'editable_content'>;
+
 
 interface UseContentResult {
     content: ContentData;
@@ -17,11 +22,8 @@ interface UseContentResult {
     updateContent: (fieldName: string, newValue: string) => Promise<void>;
 }
 
-// ID BARIS yang menyimpan data Welcome Section di tabel editable_content
-// Dalam implementasi nyata, ini harusnya diambil dari DB atau environment variable
 const WELCOME_SECTION_ID = 'welcome_section'; 
 
-// Nilai default jika fetch gagal atau data belum ada
 const DEFAULT_CONTENT: ContentData = {
     title: "Selamat Datang",
     description: "Dengan penuh kebahagiaan dan kehormatan, kami mengundang Anda untuk berbagi momen istimewa bersama kami dalam perayaan yang penuh keajaiban dan keanggunan.",
@@ -33,37 +35,35 @@ export default function useContent(sectionId: string = WELCOME_SECTION_ID): UseC
     const [content, setContent] = useState<ContentData>(DEFAULT_CONTENT);
     const [isLoading, setIsLoading] = useState(true);
     
-    // Simpan ID baris yang ditemukan
+    // State untuk menampung ID baris yang ditemukan
     const [recordId, setRecordId] = useState<string | null>(null);
 
     // 1. FUNGSI FETCH
     const fetchContent = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Fetch baris berdasarkan section_name
             const { data, error } = await supabase
                 .from('editable_content')
                 .select('id, content_json')
                 .eq('section_name', sectionId)
                 .single();
 
-            if (error && error.code !== 'PGRST116') { // PGRST116 = Not Found (tidak masalah)
+            if (error && error.code !== 'PGRST116') {
                 throw error;
             }
 
             if (data && data.content_json) {
-                // Set ID untuk update nanti
                 setRecordId(data.id); 
-                // Gabungkan default content dengan data dari DB
-                setContent({ ...DEFAULT_CONTENT, ...data.content_json as ContentData });
+                setContent({ 
+                    ...DEFAULT_CONTENT, 
+                    ...(data.content_json as ContentData) 
+                });
             } else {
-                // Jika data tidak ditemukan, kita akan menggunakan DEFAULT_CONTENT
                 setRecordId(null);
                 setContent(DEFAULT_CONTENT);
             }
-        } catch (err) {
-            console.error("Error fetching content:", err);
-            // Fallback ke default content saat terjadi error
+        } catch (err: any) {
+            console.error("Error fetching content:", err.message);
             setContent(DEFAULT_CONTENT); 
         } finally {
             setIsLoading(false);
@@ -76,10 +76,13 @@ export default function useContent(sectionId: string = WELCOME_SECTION_ID): UseC
 
     // 2. FUNGSI UPDATE (dipanggil dari EditableText)
     const updateContent = useCallback(async (fieldName: string, newValue: string) => {
+        // 1. Hitung state baru secara lokal
         const newContent = { ...content, [fieldName]: newValue };
-
-        // Payload yang akan dikirim ke Supabase
-        const payload = { content_json: newContent }; 
+        
+        // Siapkan payload (untuk UPDATE)
+        const payload: Partial<EditableContentInsert> = { 
+            content_json: newContent as unknown as Json 
+        }; 
 
         try {
             if (recordId) {
@@ -91,29 +94,38 @@ export default function useContent(sectionId: string = WELCOME_SECTION_ID): UseC
 
                 if (error) throw error;
             } else {
-                // INSERT: Jika baris belum ada (hanya terjadi sekali saat pertama kali edit)
-                const insertPayload = { ...payload, section_name: sectionId };
-                const { data, error } = await supabase
-                    .from('editable_content')
-                    .insert([insertPayload])
-                    .select('id')
-                    .single();
+                // INSERT: Jika baris belum ada
 
-                if (error) throw error;
+                // Payload lengkap untuk INSERT
+                const initialInsertPayload: EditableContentInsert = {
+                    content_json: newContent as unknown as Json,
+                    section_name: sectionId 
+                };
                 
-                // Simpan ID baris baru
-                setRecordId(data.id); 
+                // PERBAIKAN: Hapus .returns().single() yang menyebabkan error
+                const { data: insertedRows, error: insertError } = await supabase
+                    .from('editable_content')
+                    .insert([initialInsertPayload])
+                    .select('id'); // Supabase mengembalikan array of objects
+
+                if (insertError) throw insertError;
+
+                // Ambil ID dari array hasil (index 0)
+                if (insertedRows && insertedRows.length > 0) { 
+                    setRecordId(insertedRows[0].id); 
+                } else {
+                    console.error("Data inserted but no ID returned from database.");
+                }
             }
 
             // Update state lokal setelah sukses
             setContent(newContent);
             console.log(`[SUPABASE] Successfully updated ${fieldName} in ${sectionId}.`);
             
-        } catch (err) {
-            console.error("Gagal menyimpan perubahan ke DB:", err);
-            // Opsional: Tampilkan toast error di sini
+        } catch (err: any) {
+            console.error("Gagal menyimpan perubahan ke DB:", err.message);
         }
-    }, [content, recordId, sectionId]); // Dependency pada content, recordId, dan sectionId
+    }, [content, recordId, sectionId]); 
 
     return { content, isLoading, updateContent };
 }

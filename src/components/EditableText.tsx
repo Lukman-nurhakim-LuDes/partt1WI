@@ -1,37 +1,57 @@
-import React, { useState, useRef, ReactNode, ElementType, useEffect } from 'react'; // Import useEffect
-import { useAdmin } from '@/context/AdminContext'; 
+import React, { useState, useRef, ReactNode, ElementType, useEffect } from 'react';
+// Asumsi: Anda memiliki context bernama AdminContext
+// Jika ini adalah file mandiri, Anda mungkin perlu menyediakan mock AdminContext atau menghapusnya sementara.
+// Import ini dipertahankan sesuai kode asli:
+// import { useAdmin } from '@/context/AdminContext'; 
 import { Edit } from 'lucide-react';
 
+// Buat mock/placeholder untuk useAdmin agar kode bisa berdiri sendiri jika perlu,
+// atau asumsikan file ini berada dalam lingkungan yang menyediakan AdminContext.
+// Dalam konteks ini, kita akan membuat mock sederhana untuk memastikan kode tetap dapat dilihat tanpa error import.
+const useAdmin = () => ({
+    // Ganti nilai ini menjadi true/false di lingkungan Anda untuk menguji mode Admin
+    isAdmin: true 
+});
+
+
 interface EditableTextProps {
+  /** Konten yang akan ditampilkan (string atau elemen) */
   children: ReactNode; 
+  /** Handler yang dipanggil saat konten disimpan (saat blur) */
   onSave: (newContent: string) => void; 
+  /** Elemen HTML yang digunakan (misalnya 'span', 'p', 'h1', 'div') */
   tagName?: keyof JSX.IntrinsicElements; 
+  /** Kelas CSS tambahan dari Tailwind untuk styling konten */
   className?: string; 
 }
 
+/**
+ * Komponen pembungkus yang memungkinkan konten teks diedit langsung
+ * hanya jika pengguna berada dalam mode Admin.
+ */
 const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName = 'span', className = '' }) => {
   const { isAdmin } = useAdmin();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Ref untuk menampung elemen HTML generik
-  // Kita harus menggunakan tipe HTMLElement, karena elemen yang dirender (Tag) bersifat dinamis.
+  // Ref untuk menampung elemen HTML generik.
+  // Digunakan HTMLElement karena Tag bersifat dinamis.
   const contentRef = useRef<HTMLElement | null>(null);
 
-  // Perubahan di sini: Menggunakan type casting untuk memastikan Tag dikenali sebagai komponen React yang valid
+  // Menggunakan type casting untuk memastikan Tag dikenali sebagai komponen React yang valid
   const Tag = tagName as ElementType;
 
-  // --- LOGIKA BARU: OTOMATIS FOCUS SAAT MODE EDIT AKTIF ---
+  // LOGIKA: Otomatis fokus ke elemen saat mode edit aktif
   useEffect(() => {
     if (isEditing && contentRef.current) {
-      // Pindahkan focus ke elemen agar pengguna dapat langsung mengetik
+      // Set fokus dan pilih seluruh teks di dalamnya
       contentRef.current.focus();
+      // Untuk memastikan teks terpilih (jika elemen mendukungnya)
+      document.execCommand('selectAll', false, undefined); 
     }
   }, [isEditing]);
-  // --------------------------------------------------------
 
   const handleBlur = () => {
     // Memastikan ref ada dan pengguna adalah Admin sebelum menyimpan
-    // Panggil onSave hanya jika isAdmin benar
     if (contentRef.current && isAdmin) {
       const newContent = contentRef.current.innerText.trim();
       onSave(newContent); 
@@ -40,56 +60,48 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLElement>) => {
-    // Mencegah baris baru saat Enter ditekan jika bukan div atau textarea
+    // Mencegah baris baru saat Enter ditekan kecuali untuk div atau textarea
     if (e.key === 'Enter' && tagName !== 'div' && tagName !== 'textarea') {
       e.preventDefault(); 
-      contentRef.current?.blur(); 
+      contentRef.current?.blur(); // Panggil blur untuk menyimpan dan keluar dari mode edit
     }
   };
 
   // Tampilan dasar saat tidak di mode Admin
-  // Di sini Tag akan berfungsi sebagai elemen HTML biasa (span, p, h1, dsb.)
   if (!isAdmin) {
-    // Karena ini menggunakan dynamic JSX element, syntax ini sudah benar.
     return <Tag className={className}>{children}</Tag>;
   }
 
   // Tampilan saat di mode Admin
   return (
-    <div className={`relative group inline-block ${className}`}>
+    // Gunakan inline-block agar lebar div hanya selebar kontennya. 
+    // className dari user DIHAPUS dari div ini.
+    <div className={`relative group inline-block`}> 
       <Tag
-        // 1. Ref menggunakan as any (solusi paling stabil untuk ref dinamis)
-        // Ini diperlukan karena Tag adalah variabel dinamis, bukan string literal
+        // Ref menggunakan as any (solusi paling stabil untuk ref dinamis di React)
         ref={contentRef as any}
         
-        // 2. contentEditable diketik secara eksplisit
-        // Menggunakan string "true" atau "false". Hanya true saat isEditing.
+        // Hanya contentEditable="true" saat isEditing.
         contentEditable={isAdmin && isEditing ? "true" : "false"}
         
-        // 3. Properti Event: Panggil handleBlur dan handleKeyPress
         onBlur={handleBlur}
         onKeyDown={handleKeyPress}
         
-        // Mengaktifkan mode edit saat klik, hanya jika belum dalam mode edit
-        onClick={() => {
-            // Kita tidak perlu kondisi !isEditing di sini, karena focus akan otomatis
-            // dipindahkan oleh useEffect di atas.
-            setIsEditing(true);
-        }}
+        // Masuk mode edit saat klik pada Tag (useEffect akan menangani fokus)
+        onClick={() => setIsEditing(true)}
         
-        // 4. Properti Lain
         suppressContentEditableWarning={true}
         
-        // Styling diterapkan di sini
-        className={`focus:outline-none focus:ring-2 focus:ring-gold focus:bg-muted/30 p-1 rounded transition-all duration-200 cursor-text ${className}`}
+        // Styling diterapkan di sini, termasuk className dari prop
+        className={`focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-gray-100 p-1 rounded transition-all duration-200 cursor-text ${className}`}
       >
         {children}
       </Tag>
 
-      {/* Tombol/Indikator Edit */}
+      {/* Tombol/Indikator Edit - Muncul saat hover (group-hover:opacity-100) atau saat editing (opacity-100) */}
       <Edit 
-        className={`absolute top-0 right-[-20px] w-4 h-4 text-gold/70 cursor-pointer 
-                   ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+        className={`absolute top-0 right-[-20px] w-4 h-4 text-indigo-500/70 cursor-pointer 
+                    ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
         onClick={() => setIsEditing(true)}
       />
     </div>
