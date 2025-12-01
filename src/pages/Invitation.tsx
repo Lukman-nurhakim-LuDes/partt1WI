@@ -1,3 +1,5 @@
+// src/pages/Invitation.tsx atau src/components/pages/Invitation.tsx
+
 import WelcomeSection from "@/components/invitation/WelcomeSection";
 import VenueSection from "@/components/invitation/VenueSection";
 import TimelineSection from "@/components/invitation/TimelineSection";
@@ -5,38 +7,51 @@ import DressCodeSection from "@/components/invitation/DressCodeSection";
 import GallerySection from "@/components/invitation/GallerySection";
 import RsvpSection from "@/components/invitation/RsvpSection";
 import ClosingSection from "@/components/invitation/ClosingSection";
-
-// --- IMPORT KOMPONEN BARU ---
 import PhotoStorySection from "@/components/invitation/PhotoStorySection"; 
 
-const Invitation = () => {
-  return (
-    <div className="w-full overflow-x-hidden">
-      {/* 1. Halaman Selamat Datang / Intro */}
-      <WelcomeSection />
+// --- IMPOR TAMBAHAN ---
+// Impor Kontrol Musik Global (dilihat dari struktur folder Anda)
+import GlobalMusicControl from "@/components/invitation/GlobalMusicControl"; 
+import CountdownTimer from "@/components/invitation/CountdownTimer";
+import AdminToggle from "@/components/AdminToggle"; // Tombol Admin yang sudah diperbaiki
 
-      {/* 2. BAGIAN PHOTO STORYTELLING (CERITA CINTA) */}
-      <PhotoStorySection /> 
+const Invitation = () => {
+  return (
+    <div className="w-full overflow-x-hidden">
+      {/* Tambahkan Kontrol Musik Global agar tersedia di semua halaman */}
+      <GlobalMusicControl /> 
       
-      {/* 3. Informasi Acara (Lokasi dan Tanggal) */}
-      <VenueSection />
+      {/* Tambahkan Tombol Admin yang sudah diperbaiki */}
+      <AdminToggle /> 
       
-      {/* 4. Rundown Acara / Timeline */}
-      <TimelineSection />
-      
-      {/* 5. Detail Tambahan */}
-      <DressCodeSection />
-      
-      {/* 6. Galeri Foto */}
-      <GallerySection />
-      
-      {/* 7. Konfirmasi Kehadiran */}
-      <RsvpSection />
-      
-      {/* 8. Penutup */}
-      <ClosingSection />
-    </div>
-  );
+      {/* 1. Halaman Selamat Datang / Intro */}
+      <WelcomeSection />
+
+      {/* 2. Bagian Hitung Mundur */}
+      <CountdownTimer/> 
+
+      {/* 3. BAGIAN PHOTO STORYTELLING (CERITA CINTA) */}
+      <PhotoStorySection /> 
+      
+      {/* 4. Informasi Acara (Lokasi dan Tanggal) */}
+      <VenueSection />
+      
+      {/* 5. Rundown Acara / Timeline */}
+      <TimelineSection />
+      
+      {/* 6. Detail Tambahan */}
+      <DressCodeSection />
+      
+      {/* 7. Galeri Foto */}
+      <GallerySection />
+      
+      {/* 8. Konfirmasi Kehadiran */}
+      <RsvpSection />
+      
+      {/* 9. Penutup */}
+      <ClosingSection />
+    </div>
+  );
 };
 
 export default Invitation;
