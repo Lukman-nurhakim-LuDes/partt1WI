@@ -1,7 +1,8 @@
 // src/components/invitation/PhotoStorySection.tsx
 
 import React, { useState } from 'react'; 
-import useFetchStories from '@/hooks/useFetchStories';
+// Import type-safe hook (menggunakan string ID/UUID)
+import useFetchStories, { StoryId } from '@/hooks/useFetchStories'; 
 import { useAdmin } from '@/context/AdminContext'; 
 import EditableText from "@/components/EditableText";
 import { PlusCircle, Edit, X } from 'lucide-react';
@@ -10,6 +11,7 @@ import UploadModal from "@/components/UploadModal";
 import { useUploadPhoto } from '@/hooks/useUploadPhoto'; 
 
 const PhotoStorySection = () => {
+    // stories, refreshStories menggunakan type Story[] yang sudah diperbaiki
     const { stories, isLoading, error, updateStoryText, deleteStoryPhoto, refreshStories } = useFetchStories();
     const { isAdmin } = useAdmin(); 
     
@@ -22,7 +24,8 @@ const PhotoStorySection = () => {
         refreshStories(); 
     };
     
-    const handleDelete = async (id: number, src: string) => {
+    // FIX: Menggunakan StoryId (string) untuk id
+    const handleDelete = async (id: StoryId, src: string) => {
         if (!confirm("Apakah Anda yakin ingin menghapus foto cerita ini? Tindakan ini tidak dapat dibatalkan.")) {
             return;
         }
@@ -34,19 +37,19 @@ const PhotoStorySection = () => {
         }
     };
 
+    // --- Loading dan Error State ---
     if (isLoading) {
         return <section className="relative py-24 text-center text-foreground/70"><p>Memuat cerita kami...</p></section>;
     }
     if (error) {
-        return <section className="relative py-24 text-center text-destructive"><p>Error saat memuat cerita: {error}</p></section>;
+        return <section className="relative py-24 text-center text-red-500"><p>Error saat memuat cerita: {error}</p></section>;
     }
     
-    // PERBAIKAN KRITIS: Return untuk EMPTY STATE (Mengandung tombol upload)
+    // --- Empty State ---
     if (!stories || stories.length === 0) {
         return (
             <section className="relative py-24 text-center z-20">
                 <p className="text-foreground/70 mb-4">Belum ada cerita foto yang tersedia.</p>
-                {/* TOMBOL UPLOAD DI EMPTY STATE (Hanya jika Admin Mode) */}
                 {isAdmin && (
                     <Button 
                         onClick={() => setIsUploadModalOpen(true)} 
@@ -55,7 +58,8 @@ const PhotoStorySection = () => {
                         <PlusCircle className="w-5 h-5 mr-2" /> Tambah Cerita Baru
                     </Button>
                 )}
-                {isUploadModalOpen && (
+                {/* Modal Upload harus ditempatkan di akhir render jika diperlukan */}
+                {isAdmin && isUploadModalOpen && (
                     <UploadModal 
                         onClose={() => setIsUploadModalOpen(false)} 
                         section="story" 
@@ -68,18 +72,18 @@ const PhotoStorySection = () => {
         );
     }
     
-    // --- Render Grid Foto Storytelling (Jika data ada) ---
+    // --- Render Grid Foto Storytelling ---
     return (
         <section className="relative py-24 z-20">
             <div className="max-w-7xl mx-auto px-6">
                 
-                {/* Judul Section (Rata Tengah) */}
+                {/* Judul Section */}
                 <div className="flex flex-col items-center justify-center space-y-4 mb-16 animate-slide-up">
                     <h2 className="text-5xl md:text-6xl font-bold text-gold text-center font-['Playfair_Display']">
                         Kisah Perjalanan Kami
                     </h2>
                     <div className="h-1 w-32 bg-gold/50 mx-auto" />
-                    {/* Tombol Tambah (Duplikat, untuk akses cepat saat list panjang) */}
+                    {/* Tombol Tambah (Akses Cepat) */}
                     {isAdmin && (
                         <Button onClick={() => setIsUploadModalOpen(true)} className="bg-gold hover:bg-gold/80 mt-4">
                             <PlusCircle className="w-5 h-5 mr-2" /> Tambah Cerita Baru
@@ -94,19 +98,18 @@ const PhotoStorySection = () => {
                         <div
                             key={story.id}
                             className="text-center animate-fade-in"
-                            style={{ animationDelay: `${story.delay_number * 0.1}s` }}
+                            style={{ animationDelay: `${index * 0.1}s` }} // Menggunakan index, bukan delay_number
                         >
                             <div className="relative overflow-hidden rounded-xl border border-gold/30 p-2 glow-gold elegant-shadow transition-transform duration-500 hover:scale-[1.03] mb-4">
-                                <img src={story.src} alt={story.caption} className="w-full h-80 object-cover rounded-lg" />
+                                <img src={story.src} alt={story.caption || "Foto Cerita"} className="w-full h-80 object-cover rounded-lg" />
                                 
                                 {isAdmin && (
                                     <>
-                                        <button className="absolute top-4 right-4 bg-gold/90 text-black p-2 rounded-full z-10 hover:bg-gold">
-                                            <Edit className="w-4 h-4" />
-                                        </button>
+                                        {/* Tombol Edit/Hapus harusnya ditempatkan di overlay atau menggunakan fitur bawaan EditableText */}
+                                        {/* Tombol Hapus */}
                                         <button 
                                             onClick={() => handleDelete(story.id, story.src)}
-                                            className="absolute top-4 right-14 bg-destructive/90 text-white p-2 rounded-full z-10 hover:bg-red-700 transition-colors"
+                                            className="absolute top-4 right-4 bg-destructive/90 text-white p-2 rounded-full z-10 hover:bg-red-700 transition-colors"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -114,33 +117,35 @@ const PhotoStorySection = () => {
                                 )}
                             </div>
                             
-                            {/* FIX DOM NESTING: Gunakan <div> sebagai parent untuk teks yang diedit */}
+                            {/* FIX DOM NESTING: Wrapper untuk Caption */}
                             <div className="mb-1"> 
                                 <h3 className="text-2xl font-semibold text-gold font-['Playfair_Display']">
+                                    {/* FIX: updateStoryText menggunakan story.id (string) */}
                                     <EditableText onSave={(val) => updateStoryText(story.id, 'caption', val)} tagName="span">
-                                        {story.caption}
+                                        {story.caption || "Tambahkan Caption"}
                                     </EditableText>
                                 </h3>
                             </div>
                             
-                            {/* FIX DOM NESTING: Gunakan <div> sebagai parent untuk teks deskripsi */}
+                            {/* FIX DOM NESTING: Wrapper untuk Deskripsi */}
                             <div className="text-foreground/70 text-sm">
+                                {/* FIX: updateStoryText menggunakan story.id (string) */}
                                 <EditableText onSave={(val) => updateStoryText(story.id, 'description', val)} tagName="span">
-                                    {story.description}
+                                    {story.description || "Tambahkan Deskripsi"}
                                 </EditableText>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* MODAL UPLOAD BARU (Hanya ada di return utama jika sudah ada data) */}
-                {isUploadModalOpen && (
+                {/* MODAL UPLOAD (Ditempatkan di luar grid) */}
+                {isAdmin && isUploadModalOpen && (
                     <UploadModal 
                         onClose={() => setIsUploadModalOpen(false)} 
                         section="story" 
                         uploadFunction={uploadAndInsertPhoto} 
                         onUploadSuccess={handleUploadSuccess} 
-                        onDataRefresh={refreshStories} // Meneruskan fungsi refresh
+                        onDataRefresh={refreshStories}
                     />
                 )}
             </div>

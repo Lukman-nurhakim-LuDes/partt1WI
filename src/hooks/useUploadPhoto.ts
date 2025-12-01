@@ -1,6 +1,6 @@
 // src/hooks/useUploadPhoto.ts
 
-import { supabase } from '@/lib/Client';
+import { supabase } from '@/lib/supabase';
 import { useAdmin } from '@/context/AdminContext';
 
 export const useUploadPhoto = (section: 'story' | 'gallery') => {

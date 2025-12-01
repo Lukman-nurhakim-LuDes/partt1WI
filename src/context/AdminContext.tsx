@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/Client'; // Pastikan path ke klien Supabase Anda benar
+import { supabase } from '@/integrations/supabase/client';
 
 // --- Interfaces ---
 interface AdminContextType {

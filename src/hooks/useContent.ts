@@ -1,7 +1,7 @@
 // src/hooks/useContent.ts
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/Client'; // Import client Supabase Anda
+import { supabase } from '@/integrations/supabase/client'; // LOKASI YANG BENAR
 
 // Interface untuk data content yang tersimpan dalam format JSON
 interface ContentData {

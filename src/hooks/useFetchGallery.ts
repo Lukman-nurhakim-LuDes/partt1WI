@@ -1,22 +1,23 @@
 // src/hooks/useFetchGallery.ts
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/Client'; 
+import { supabase } from '@/integrations/supabase/client'; 
+import type { Tables } from '@/integrations/supabase/types'; // Import Tables type
+import { PostgrestError } from '@supabase/supabase-js';
 
 // --- Interfaces dan Tipe ---
 
-interface Photo {
-    id: number;
-    src: string;
-    order_index: number; // Kolom yang dicari oleh Gallery
-    section: 'gallery'; 
-}
+// Definisikan tipe Photo berdasarkan type Tabel dynamic_photos
+export type Photo = Tables<'dynamic_photos'>; 
+// ID Supabase adalah UUID (string), bukan number
+export type PhotoId = string; 
 
 interface UseGalleryResult {
     photos: Photo[] | null;
     isLoading: boolean;
     error: string | null;
-    deleteGalleryPhoto: (id: number, src: string) => Promise<void>; 
+    // Menggunakan PhotoId (string) untuk ID
+    deleteGalleryPhoto: (id: PhotoId, src: string) => Promise<void>; 
     refreshPhotos: () => void;
 }
 
@@ -29,20 +30,22 @@ export default function useFetchGallery(): UseGalleryResult {
     const fetchPhotos = useCallback(async () => {
         setIsLoading(true);
         try {
-            // FINAL FIX: Menggunakan kolom order_index secara langsung
+            // FIX: Menggunakan select('*') untuk mengambil semua kolom yang diperlukan
             const { data, error } = await supabase
                 .from('dynamic_photos')
-                .select('id, src, order_index, section') 
+                .select('*') 
                 .eq('section', 'gallery') 
-                .order('order_index', { ascending: true }); // Order berdasarkan order_index
+                .order('order_index', { ascending: true }); 
 
             if (error) {
-                setError(error.message);
+                // FIX: Menggunakan PostgrestError type
+                setError((error as PostgrestError).message);
                 setIsLoading(false);
                 return;
             }
 
-            setPhotos(data as unknown as Photo[]);
+            // FIX: Hapus 'as unknown as Photo[]' karena kita menggunakan type safety
+            setPhotos(data as Photo[]);
             setError(null);
         } catch (err: any) {
              console.error("Gagal memuat galeri:", err.message);
@@ -60,12 +63,26 @@ export default function useFetchGallery(): UseGalleryResult {
         fetchPhotos();
     };
 
-    // --- FUNGSI HAPUS FOTO GALERI (Dipertahankan agar lengkap) ---
-    const deleteGalleryPhoto = async (id: number, src: string) => {
+    // --- FUNGSI HAPUS FOTO GALERI ---
+    const deleteGalleryPhoto = async (id: PhotoId, src: string) => {
         try {
-            const filePath = src.split('wedding_assets/')[1];
-            await supabase.storage.from('wedding_assets').remove([filePath]);
-            await supabase.from('dynamic_photos').delete().eq('id', id);
+            // FIX: Parsing path yang lebih aman
+            const urlParts = src.split('wedding_assets/');
+            const filePath = urlParts.length > 1 ? urlParts[1] : null; 
+
+            if (filePath) {
+                 // 1. Hapus dari Storage
+                 const { error: storageError } = await supabase.storage.from('wedding_assets').remove([filePath]);
+                 if (storageError) console.warn("Gagal menghapus file dari storage (mungkin tidak ada):", storageError.message);
+            }
+           
+            // 2. Hapus dari Database
+            // FIX: Menggunakan id string
+            const { error: dbError } = await supabase.from('dynamic_photos').delete().eq('id', id).single();
+
+            if (dbError) throw dbError as PostgrestError;
+            
+            // 3. Perbarui state lokal
             setPhotos(prevPhotos => prevPhotos ? prevPhotos.filter(photo => photo.id !== id) : null);
             
         } catch (err: any) {

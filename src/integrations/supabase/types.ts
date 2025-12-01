@@ -7,13 +7,79 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
+      /**
+       * Tabel untuk menyimpan konten website yang dapat diedit oleh admin
+       * Digunakan oleh hook useContent
+       */
+      editable_content: {
+        Row: {
+          created_at: string
+          content_json: Json
+          id: string
+          section_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          content_json?: Json
+          id?: string
+          section_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          content_json?: Json
+          id?: string
+          section_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      /**
+       * Tabel untuk menyimpan foto yang diunggah admin (Gallery atau Story)
+       * Digunakan oleh hook useUploadPhoto
+       */
+      dynamic_photos: {
+        Row: {
+          id: string
+          src: string
+          section: string // 'story' | 'gallery'
+          caption: string | null
+          description: string | null
+          order_index: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          src: string
+          section: string
+          caption?: string | null
+          description?: string | null
+          order_index: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          src?: string
+          section?: string
+          caption?: string | null
+          description?: string | null
+          order_index?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      /**
+       * Tabel untuk menyimpan RSVP dari tamu
+       */
       rsvp_submissions: {
         Row: {
           created_at: string
