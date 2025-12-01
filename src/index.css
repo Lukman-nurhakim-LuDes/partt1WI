@@ -2,142 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* * Definition of the elegant dark design system. 
+ * All colors, gradients, and effects are defined using HSL values 
+ * to ensure consistency with the premium palette.
+ */
 
 @layer base {
-  :root {
-    /* Premium Color Palette */
-    --berry-deep: 348 89% 29%;
-    --emerald-rich: 163 95% 22%;
-    --gold-warm: 38 43% 65%;
-    --black-deep: 0 0% 4%;
+    :root {
+        /* Premium Color Palette (Used for Base, Primary, Secondary) */
+        --berry-deep: 348 89% 29%; /* Primary Red/Berry */
+        --emerald-rich: 163 95% 22%; /* Secondary Green/Emerald */
+        --gold-warm: 38 43% 65%; /* Accent Gold */
+        --black-deep: 0 0% 4%; /* Deepest Black */
+        
+        /* Core Theme Colors */
+        --background: var(--black-deep);
+        --foreground: 38 43% 95%; /* Near-White/Off-Gold for text */
+
+        /* Components: Card/Popover use a slightly less deep version of Berry */
+        --card: 348 89% 12%; 
+        --card-foreground: var(--foreground);
+
+        --popover: var(--card);
+        --popover-foreground: var(--foreground);
+
+        /* Actions */
+        --primary: var(--berry-deep);
+        --primary-foreground: var(--foreground);
+
+        --secondary: var(--emerald-rich);
+        --secondary-foreground: var(--foreground);
+
+        /* Muted for secondary text and borders */
+        --muted: 0 0% 15%;
+        --muted-foreground: var(--gold-warm);
+
+        --accent: var(--gold-warm); /* Gold Accent */
+        --accent-foreground: var(--black-deep); /* Text on Gold */
+
+        --destructive: 0 84.2% 60.2%; /* Standard Red for alerts */
+        --destructive-foreground: var(--foreground);
+
+        --border: 38 43% 25%;
+        --input: 38 43% 25%;
+        --ring: var(--gold-warm); /* Gold Ring focus */
+
+        --radius: 0.75rem; /* Reduced slightly for modern feel */
+        
+        /* Satin Gradients (Used for backgrounds/buttons) */
+        --gradient-satin-berry: linear-gradient(135deg, hsl(348 89% 29%) 0%, hsl(348 89% 20%) 50%, hsl(348 89% 29%) 100%);
+        --gradient-satin-emerald: linear-gradient(135deg, hsl(163 95% 22%) 0%, hsl(163 95% 15%) 50%, hsl(163 95% 22%) 100%);
+        --gradient-gold-overlay: linear-gradient(180deg, hsla(38 43% 65% / 0) 0%, hsla(38 43% 65% / 0.1) 100%);
+        
+        /* Effects */
+        --shadow-glow-gold: 0 0 40px hsla(38 43% 65% / 0.4);
+        --shadow-elegant: 0 20px 60px hsla(0 0% 0% / 0.6);
+        --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        /* Removed unnecessary and conflicting standard dark mode variables. 
+           This theme is inherently dark. */
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        /* Assuming 'Inter' is imported externally */
+        font-family: 'Inter', sans-serif;
+    }
     
-    /* Core Theme Colors */
-    --background: 0 0% 4%;
-    --foreground: 38 43% 95%;
-
-    --card: 348 89% 12%;
-    --card-foreground: 38 43% 95%;
-
-    --popover: 348 89% 12%;
-    --popover-foreground: 38 43% 95%;
-
-    --primary: 348 89% 29%;
-    --primary-foreground: 38 43% 95%;
-
-    --secondary: 163 95% 22%;
-    --secondary-foreground: 38 43% 95%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 38 43% 65%;
-
-    --accent: 38 43% 65%;
-    --accent-foreground: 0 0% 4%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 38 43% 95%;
-
-    --border: 38 43% 25%;
-    --input: 38 43% 25%;
-    --ring: 38 43% 65%;
-
-    --radius: 1rem;
-    
-    /* Satin Gradients */
-    --gradient-satin-berry: linear-gradient(135deg, hsl(348 89% 29%) 0%, hsl(348 89% 20%) 50%, hsl(348 89% 29%) 100%);
-    --gradient-satin-emerald: linear-gradient(135deg, hsl(163 95% 22%) 0%, hsl(163 95% 15%) 50%, hsl(163 95% 22%) 100%);
-    --gradient-gold-overlay: linear-gradient(180deg, hsla(38 43% 65% / 0) 0%, hsla(38 43% 65% / 0.1) 100%);
-    
-    /* Effects */
-    --shadow-glow-gold: 0 0 40px hsla(38 43% 65% / 0.4);
-    --shadow-elegant: 0 20px 60px hsla(0 0% 0% / 0.6);
-    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  /* Dark mode uses same elegant dark theme */
-  .dark {
-    --background: 0 0% 4%;
-    --foreground: 38 43% 95%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
-  }
+    h1, h2, h3, h4, h5, h6 {
+        /* Assuming 'Playfair Display' is imported externally */
+        font-family: 'Playfair Display', serif;
+    }
 }
 
 @layer components {
     /* --- CUSTOM FLIP CARD STYLING --- */
     
-    /* Styling Kontainer Timer */
     .countdown-container {
-        /* background-color dihapus untuk membuat container transparan */
         @apply py-10; 
     }
     
     .countdown-title {
-        @apply text-gold text-2xl font-bold uppercase tracking-widest;
+        /* Used text-accent utility for consistency */
+        @apply text-accent text-2xl font-bold uppercase tracking-widest; 
     }
 
     /* Styling Unit Kartu */
@@ -147,18 +98,18 @@ All colors MUST be HSL.
 
     .flip-card-label {
         @apply mt-2 text-sm uppercase tracking-widest;
-        color: hsl(var(--accent)); /* Emas */
+        color: hsl(var(--accent)); 
         font-family: 'Playfair Display', serif;
     }
     
     .flip-card-wrapper {
-        /* Hapus background-color agar transparan */
-        @apply flex rounded-xl border-2 border-solid overflow-hidden elegant-shadow;
-        border-color: hsl(var(--accent)); /* Garis luar emas */
+        /* Applied border-accent class for Tailwind integration */
+        @apply flex rounded-xl border-2 border-solid overflow-hidden elegant-shadow border-accent; 
     }
     
     .digit-container {
         position: relative;
+        /* DESKTOP/DEFAULT SIZE */
         width: 4.5rem; /* 72px */
         height: 5.5rem; /* 88px */
         font-size: 4rem; 
@@ -168,15 +119,13 @@ All colors MUST be HSL.
         font-family: 'Inter', sans-serif;
         font-weight: 800;
         
-        /* Setup 3D */
         transform-style: preserve-3d;
         perspective: 200px;
-        transition: box-shadow 0.3s ease-in-out;
-        /* Hapus background-color agar transparan */
+        transition: var(--transition-smooth); /* Use custom variable */
     }
 
     .digit-container:first-child {
-        border-right: 1px solid hsla(var(--accent) / 0.3);
+        border-right: 1px solid hsla(var(--accent) / 0.3); 
     }
     
     /* Elemen kartu statis dan flip */
@@ -209,6 +158,7 @@ All colors MUST be HSL.
         position: absolute;
         width: 100%;
         left: 0;
+        color: inherit; 
     }
     
     .digit-top::after, .flip-top::after {
@@ -219,11 +169,8 @@ All colors MUST be HSL.
         top: -100%; 
     }
     
-    /* Styling Kartu Flip */
-    /* background-color dihapus untuk elemen statis, namun... */
+    /* Styling Kartu Flip (The moving parts) */
     .flip-top, .flip-bottom {
-        /* KITA HARUS MEMPERTAHANKAN WARNA GELAP pada flip-card itu sendiri 
-           agar animasi terlihat. Kita gunakan black-deep Anda */
         background-color: hsl(var(--black-deep)); 
         z-index: 2;
     }
@@ -237,169 +184,151 @@ All colors MUST be HSL.
         z-index: 3;
     }
     
-    /* Elemen statis (yang tidak flip) dibiarkan transparan untuk menciptakan kontras */
+    /* Elemen statis (The background card) */
+    /* Changed to use --card for background to create depth/contrast */
     .digit-top, .digit-bottom {
-        background-color: transparent; 
-    }
-
-    .digit-bottom {
+        background-color: hsl(var(--card)); 
         z-index: 1; 
     }
-}
-/* src/index.css (Tambahkan di bawah @layer components) */
 
-@layer components {
-    /* ... (Styling standar untuk tablet/desktop) ... */
-
-    /* Style default desktop (misalnya) */
-    .timer-wrapper {
-        gap: 30px; /* Jarak antar unit */
-    }
-    
-    .digit-container {
-        width: 45px; /* Lebar digit */
-        height: 70px;
-        font-size: 3em; 
-        line-height: 70px;
-    }
-    
-    .flip-card-label {
-        font-size: 1.1em;
-    }
-    
-    /* === PERBAIKAN RESPONSIVITAS: Media Query untuk Mobile === */
-    /* Target layar dengan lebar maksimum 640px (semua perangkat mobile) */
+    /* === RESPONSIVENESS FIXES (Mobile) === */
+    /* The redundant desktop size override was removed to clean up the flow. 
+       The default size now acts as the desktop size. */
     @media (max-width: 640px) {
         .timer-wrapper {
-            gap: 15px; /* Kurangi jarak antar unit */
+            gap: 0.5rem; /* Reduced gap */
         }
         
         .flip-card-unit {
-            /* Pastikan unit tidak terlalu berjarak */
-            margin-left: 0;
-            margin-right: 0;
+            margin: 0 0.5rem;
         }
 
         .digit-container {
-            width: 35px; /* Kurangi lebar digit (agar 4 unit muat) */
+            /* MOBILE SIZE (Used original values) */
+            width: 35px; 
             height: 55px;
-            font-size: 2.2em; /* Kurangi ukuran font */
+            font-size: 2.2em; 
             line-height: 55px;
         }
 
         .flip-card-wrapper {
-            border-width: 1px; /* Kurangi ketebalan border */
+            border-width: 1px;
         }
 
         .flip-card-label {
-            font-size: 0.8em; /* Kurangi ukuran label (Hari, Jam, Menit, Detik) */
+            font-size: 0.75em; /* Smallest text size */
         }
     }
 }
 
 @layer utilities {
-  .text-gold {
-    color: hsl(var(--accent));
-  }
-  
-  .bg-satin-berry {
-    background: var(--gradient-satin-berry);
-  }
-  
-  .bg-satin-emerald {
-    background: var(--gradient-satin-emerald);
-  }
-  
-  .glow-gold {
-    box-shadow: var(--shadow-glow-gold);
-  }
-  
-  .elegant-shadow {
-    box-shadow: var(--shadow-elegant);
-  }
-  
-  .animate-fade-in {
-    animation: fadeIn 1s ease-out forwards;
-  }
-  
-  .animate-slide-up {
-    animation: slideUp 0.8s ease-out forwards;
-  }
-  
-  .animate-parallax {
-    animation: parallax 20s ease-in-out infinite;
-  }
-  
-  /* --- CUSTOM FLIP CARD KEYFRAMES --- */
-  
-  @keyframes flip-top-out {
-      0% {
-          transform: rotateX(0deg);
-      }
-      100% {
-          transform: rotateX(-180deg); 
-      }
-  }
+    /* Defined text-accent as a clean alternative to text-gold */
+    .text-accent {
+      color: hsl(var(--accent));
+    }
+    
+    .text-gold {
+        color: hsl(var(--accent));
+    }
+    
+    .bg-satin-berry {
+        background: var(--gradient-satin-berry);
+    }
+    
+    .bg-satin-emerald {
+        background: var(--gradient-satin-emerald);
+    }
+    
+    .glow-gold {
+        box-shadow: var(--shadow-glow-gold);
+    }
+    
+    .elegant-shadow {
+        box-shadow: var(--shadow-elegant);
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 1s ease-out forwards;
+    }
+    
+    .animate-slide-up {
+        animation: slideUp 0.8s ease-out forwards;
+    }
+    
+    .animate-parallax {
+        animation: parallax 20s ease-in-out infinite;
+    }
+    
+    /* --- CUSTOM FLIP CARD KEYFRAMES --- */
+    
+    @keyframes flip-top-out {
+        0% {
+            transform: rotateX(0deg);
+        }
+        100% {
+            transform: rotateX(-180deg); 
+        }
+    }
 
-  @keyframes flip-bottom-in {
-      0% {
-          transform: rotateX(180deg); 
-      }
-      100% {
-          transform: rotateX(0deg); 
-      }
-  }
+    @keyframes flip-bottom-in {
+        0% {
+            transform: rotateX(180deg); 
+        }
+        100% {
+            transform: rotateX(0deg); 
+        }
+    }
 
-  /* Class untuk memicu animasi dari JS/TS */
-  .animate-flip-top-out {
-      animation: flip-top-out 0.6s ease-in both;
-  }
+    /* Class untuk memicu animasi dari JS/TS */
+    .animate-flip-top-out {
+        animation: flip-top-out 0.6s ease-in both;
+    }
 
-  .animate-flip-bottom-in {
-      animation: flip-bottom-in 0.6s ease-out both;
-  }
-  
-  /* --- KEYFRAMES AND ANIMATIONS (sudah ada) --- */
+    .animate-flip-bottom-in {
+        animation: flip-bottom-in 0.6s ease-out both;
+    }
+    
+    /* --- OTHER KEYFRAMES AND ANIMATIONS (Original) --- */
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
-  }
-  
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(40px);
+    
+    @keyframes parallax {
+        0%, 100% {
+            transform: translateY(0) scale(1);
+        }
+        50% {
+            transform: translateY(-10px) scale(1.02);
+        }
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+    
+    @keyframes sparkle {
+        0%, 100% {
+            opacity: 0;
+            transform: scale(0);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
-  }
-  
-  @keyframes parallax {
-    0%, 100% {
-      transform: translateY(0) scale(1);
-    }
-    50% {
-      transform: translateY(-10px) scale(1.02);
-    }
-  }
-  
-  @keyframes sparkle {
-    0%, 100% {
-      opacity: 0;
-      transform: scale(0);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
 }
