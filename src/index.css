@@ -246,6 +246,56 @@ All colors MUST be HSL.
         z-index: 1; 
     }
 }
+/* src/index.css (Tambahkan di bawah @layer components) */
+
+@layer components {
+    /* ... (Styling standar untuk tablet/desktop) ... */
+
+    /* Style default desktop (misalnya) */
+    .timer-wrapper {
+        gap: 30px; /* Jarak antar unit */
+    }
+    
+    .digit-container {
+        width: 45px; /* Lebar digit */
+        height: 70px;
+        font-size: 3em; 
+        line-height: 70px;
+    }
+    
+    .flip-card-label {
+        font-size: 1.1em;
+    }
+    
+    /* === PERBAIKAN RESPONSIVITAS: Media Query untuk Mobile === */
+    /* Target layar dengan lebar maksimum 640px (semua perangkat mobile) */
+    @media (max-width: 640px) {
+        .timer-wrapper {
+            gap: 15px; /* Kurangi jarak antar unit */
+        }
+        
+        .flip-card-unit {
+            /* Pastikan unit tidak terlalu berjarak */
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .digit-container {
+            width: 35px; /* Kurangi lebar digit (agar 4 unit muat) */
+            height: 55px;
+            font-size: 2.2em; /* Kurangi ukuran font */
+            line-height: 55px;
+        }
+
+        .flip-card-wrapper {
+            border-width: 1px; /* Kurangi ketebalan border */
+        }
+
+        .flip-card-label {
+            font-size: 0.8em; /* Kurangi ukuran label (Hari, Jam, Menit, Detik) */
+        }
+    }
+}
 
 @layer utilities {
   .text-gold {

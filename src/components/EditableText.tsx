@@ -1,5 +1,4 @@
 import React, { useState, useRef, ReactNode, ElementType, useEffect } from 'react';
-// IMPORT ASLI DIKEMBALIKAN karena path di seluruh proyek sudah diperbaiki
 import { useAdmin } from '@/context/AdminContext'; 
 import { Edit } from 'lucide-react';
 
@@ -20,7 +19,7 @@ interface EditableTextProps {
  * hanya jika pengguna berada dalam mode Admin.
  */
 const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName = 'span', className = '' }) => {
-  // Menggunakan hook yang sesungguhnya
+  // MENGGUNAKAN HOOK INTERNAL: Mengambil isAdmin dari context
   const { isAdmin } = useAdmin();
   const [isEditing, setIsEditing] = useState(false);
   
@@ -33,10 +32,20 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
   // LOGIKA: Otomatis fokus ke elemen saat mode edit aktif
   useEffect(() => {
     if (isEditing && contentRef.current) {
-      // Set fokus dan pilih seluruh teks di dalamnya
       contentRef.current.focus();
-      // Untuk memastikan teks terpilih
-      document.execCommand('selectAll', false, undefined); 
+      // Menggunakan DOM Range untuk memilih teks, lebih modern dari execCommand
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(contentRef.current);
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } catch (e) {
+        // Fallback jika terjadi error
+        document.execCommand('selectAll', false, undefined as any);
+      }
     }
   }, [isEditing]);
 
@@ -44,7 +53,7 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
     // Memastikan ref ada dan pengguna adalah Admin sebelum menyimpan
     if (contentRef.current && isAdmin) {
       const newContent = contentRef.current.innerText.trim();
-      // Hanya panggil onSave jika konten tidak kosong
+      // Hanya panggil onSave jika konten tidak kosong dan berbeda dari konten awal
       if (newContent !== '') {
         onSave(newContent); 
       }
@@ -74,7 +83,7 @@ const EditableText: React.FC<EditableTextProps> = ({ children, onSave, tagName =
         ref={contentRef as any}
         
         // Hanya contentEditable="true" saat isEditing.
-        contentEditable={isAdmin && isEditing ? "true" : "false"}
+        contentEditable={isEditing ? "true" : "false"} // Hanya perlu cek isEditing karena sudah dibungkus if (!isAdmin)
         
         onBlur={handleBlur}
         onKeyDown={handleKeyPress}
