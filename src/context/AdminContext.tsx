@@ -1,112 +1,119 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+// src/context/AdminContext.tsx
 
-// --- Interfaces ---
+import React, { 
+    createContext, 
+    useContext, 
+    useState, 
+    useEffect, 
+    ReactNode 
+} from 'react';
+import { supabase } from '@/integrations/supabase/client'; // Lokasi klien Supabase yang sudah benar
+import type { Session } from '@supabase/supabase-js'; // Menggunakan Session type yang benar
+
+// --- Konfigurasi Admin (Dibaca dari .env) ---
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'lukmannrhkm80@gmail.com'; 
+// Asumsi VITE_ADMIN_PASSWORD ada di .env dan dibaca oleh logika loginAdmin
+// Kita tidak perlu mendeklarasikannya di sini karena hanya digunakan di fungsi login
+
+// --- Interface ---
 interface AdminContextType {
-  isAdmin: boolean;
-  loginAdmin: (password: string) => Promise<boolean>; 
-  logoutAdmin: () => void;
+    isAdmin: boolean;
+    session: Session | null;
+    loginAdmin: (password: string) => Promise<boolean>;
+    logoutAdmin: () => Promise<void>;
 }
 
-// --- Context ---
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-// Ambil variables dari ENV
-// Catatan: Pastikan key VITE_ADMIN_EMAIL dan VITE_ADMIN_PASSWORD ada di file .env Anda.
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'lukmannrhkm80@gmail.com'; 
-const ADMIN_PASSWORD_LOCAL = import.meta.env.VITE_ADMIN_PASSWORD || 'Lukmannr24'; 
-
 // --- Provider Component ---
-interface AdminProviderProps {
-  children: ReactNode;
-}
+export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [session, setSession] = useState<Session | null>(null); 
+    const [loading, setLoading] = useState(true);
 
-export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
-  const [isAdmin, setIsAdmin] = useState<boolean>(false); 
+    // 1. Cek Status Sesi Supabase Saat Aplikasi Dimuat
+    useEffect(() => {
+        // Cek sesi yang ada di localStorage
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            // Jika ada sesi, dan emailnya cocok dengan admin, set isAdmin
+            if (session && session.user.email === ADMIN_EMAIL) {
+                setIsAdmin(true);
+            }
+            setLoading(false);
+        });
 
-  // Load state dan Periksa sesi Supabase
-  useEffect(() => {
-    // 1. Load dari Local Storage
-    const saved = localStorage.getItem('isAdminMode');
-    if (saved === 'true') {
-        setIsAdmin(true); 
-    }
-    
-    // 2. Verifikasi sesi Supabase saat start
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsAdmin(true);
-      } else if (saved === 'true') {
-         // Jika localStorage aktif tetapi sesi Supabase hilang, matikan mode Admin
-         setIsAdmin(false);
-         localStorage.removeItem('isAdminMode');
-      }
-    });
-  }, []);
+        // Dengarkan perubahan sesi (misalnya setelah login/logout)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                setSession(session);
+                // Hanya set isAdmin jika sesi ada DAN email cocok
+                if (session && session.user.email === ADMIN_EMAIL) {
+                    setIsAdmin(true);
+                } else {
+                    setIsAdmin(false);
+                }
+            }
+        );
 
-  // Simpan state ke Local Storage
-  useEffect(() => {
-    localStorage.setItem('isAdminMode', isAdmin.toString());
-  }, [isAdmin]);
+        return () => subscription.unsubscribe();
+    }, []);
 
-  // --- FUNGSI LOGIN ADMIN ASINKRONUS ---
-  const loginAdmin = useCallback(async (password: string): Promise<boolean> => {
-    
-    // 1. Cek Password Lokal (Gate Cepat)
-    if (password !== ADMIN_PASSWORD_LOCAL) {
-      console.warn("Login attempt failed: Local password mismatch.");
-      return false;
-    }
-    
-    // 2. Login ke Supabase Auth
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+
+    // 2. Logika Login Admin (Menggunakan Password dari Input User)
+    const loginAdmin = async (passwordInput: string): Promise<boolean> => {
+        
+        if (!ADMIN_EMAIL) {
+            console.error("VITE_ADMIN_EMAIL tidak ditemukan. Gagal login.");
+            return false;
+        }
+
+        // Memanggil Supabase Auth untuk membuat sesi authenticated
+        const { error } = await supabase.auth.signInWithPassword({
             email: ADMIN_EMAIL, 
-            password: password,
+            password: passwordInput,
         });
 
         if (error) {
-           console.error("Supabase Login Error:", error.message);
-           throw error; // Lemparkan error agar ditangkap di block catch
+            console.error("Login Supabase Gagal:", error.message);
+            setIsAdmin(false);
+            return false;
         }
 
-        // 3. Jika Sukses
-        if (data.session) {
-            setIsAdmin(true);
-            return true;
+        // Jika berhasil, onAuthStateChange akan mengurus setSession dan setIsAdmin(true)
+        console.log("Login Admin Sukses. Sesi Supabase Dibuat.");
+        return true;
+    };
+
+
+    // 3. Logika Logout Admin
+    const logoutAdmin = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error("Logout Gagal:", error.message);
+        } else {
+            // onAuthStateChange akan set setIsAdmin(false)
+            console.log("Logout Sukses.");
         }
-
-        return false;
-
-    } catch (error: any) {
-        console.error("Login failed:", error.message || "Unknown error during Supabase sign-in.");
-        return false;
-    }
+    };
     
-  }, [ADMIN_EMAIL, ADMIN_PASSWORD_LOCAL]);
-
-  const logoutAdmin = useCallback(async () => {
-    try {
-        await supabase.auth.signOut();
-        setIsAdmin(false);
-        console.log("Logged out successfully.");
-    } catch (error) {
-        console.error("Logout error:", error);
+    // Tampilkan loading state
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center">Memuat sesi...</div>;
     }
-  }, []);
 
-  return (
-    <AdminContext.Provider value={{ isAdmin, loginAdmin, logoutAdmin }}>
-      {children}
-    </AdminContext.Provider>
-  );
+    return (
+        <AdminContext.Provider value={{ isAdmin, session, loginAdmin, logoutAdmin }}>
+            {children}
+        </AdminContext.Provider>
+    );
 };
 
-// --- Custom Hook ---
+// Hook untuk menggunakan konteks
 export const useAdmin = () => {
-  const context = useContext(AdminContext);
-  if (context === undefined) {
-    throw new Error('useAdmin must be used within an AdminProvider');
-  }
-  return context;
+    const context = useContext(AdminContext);
+    if (context === undefined) {
+        throw new Error('useAdmin must be used within an AdminProvider');
+    }
+    return context;
 };
