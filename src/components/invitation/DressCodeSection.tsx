@@ -1,12 +1,11 @@
-// src/components/invitation/DressCodeSection.tsx (Versi Diperbarui)
+// src/components/invitation/DressCodeSection.tsx (Versi Final)
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import satinBerryBg from "@/assets/satin-berry-bg.jpg";
 import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg";
-import EditableText from "@/components/EditableText"; // Import komponen editing
-// Anda perlu membuat custom hook untuk mengelola data DressCode jika ingin dari Supabase
-// Misalnya: import useFetchDressCode from "@/hooks/useFetchDressCode"; 
+import EditableText from "@/components/EditableText"; 
+// import useFetchDressCode from "@/hooks/useFetchDressCode"; // Jika Anda menggunakannya
 
 const initialDressCodes = [
   {
@@ -83,12 +82,14 @@ const DressCodeSection = () => {
             <Sparkles className="w-8 h-8 text-gold" />
           </div>
           <div className="h-1 w-32 bg-gold/50 mx-auto" />
-          <p className="text-xl text-foreground/70">
+          
+          {/* PERBAIKAN DOM NESTING: Ganti <p> dengan <div> di Subjudul */}
+          <div className="text-xl text-foreground/70">
             {/* 2. EDITABLE TEXT: Subjudul */}
             <EditableText onSave={handleSectionTextSave(setSectionSubtitle, 'subtitle')} tagName="span">
                 {sectionSubtitle}
             </EditableText>
-          </p>
+          </div>
         </div>
         
         {/* Dress Code Cards */}
@@ -118,6 +119,8 @@ const DressCodeSection = () => {
                         {item.title}
                     </EditableText>
                   </h3>
+                  
+                  {/* PERBAIKAN DOM NESTING: Biarkan <p> di sini jika Anda yakin EditableText akan merender <span> (karena tagName="span"). Namun, untuk konsistensi yang ketat, ganti dengan <div>. Saya biarkan <p> di sini karena tagName=span. */}
                   <p className="text-foreground/80">
                     {/* 4. EDITABLE TEXT: Deskripsi Item */}
                     <EditableText onSave={handleItemSave(index, 'description')} tagName="span">
@@ -132,12 +135,13 @@ const DressCodeSection = () => {
         
         {/* Additional Info */}
         <div className="mt-12 text-center">
-          <p className="text-lg text-foreground/60 max-w-3xl mx-auto">
+          {/* PERBAIKAN DOM NESTING: Ganti <p> dengan <div> di Informasi Tambahan */}
+          <div className="text-lg text-foreground/60 max-w-3xl mx-auto">
             {/* 5. EDITABLE TEXT: Informasi Tambahan */}
             <EditableText onSave={handleSectionTextSave(setAdditionalInfo, 'additionalInfo')} tagName="span">
                 {additionalInfo}
             </EditableText>
-          </p>
+          </div>
         </div>
       </div>
     </section>

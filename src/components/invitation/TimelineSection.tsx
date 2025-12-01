@@ -1,48 +1,48 @@
-// src/components/invitation/TimelineSection.tsx (Versi Diperbarui)
+// src/components/invitation/TimelineSection.tsx (Versi Final)
 
-import { useState } from "react"; // Tambahkan useState
+import { useState } from "react"; 
 import { Clock } from "lucide-react";
 import satinEmeraldBg from "@/assets/Bg-4.jpg";
 import CountdownTimer from "./CountdownTimer"; 
-import EditableText from "@/components/EditableText"; // Import komponen editing
+import EditableText from "@/components/EditableText"; 
 
 const initialTimelineEvents = [
-  {
-    id: 1,
-    time: "18:30 WIB",
-    title: "Pendaftaran Tamu",
-    description: "Tamu dipersilakan hadir dan melakukan registrasi"
-  },
-  {
-    id: 2,
-    time: "19:00 WIB",
-    title: "Pembukaan Acara",
-    description: "Opening ceremony dan sambutan"
-  },
-  {
-    id: 3,
-    time: "19:30 WIB",
-    title: "Welcome Dinner",
-    description: "Makan malam bersama dengan hidangan premium"
-  },
-  {
-    id: 4,
-    time: "20:30 WIB",
-    title: "Entertainment",
-    description: "Pertunjukan musik live dan hiburan spesial"
-  },
-  {
-    id: 5,
-    time: "21:30 WIB",
-    title: "Networking Session",
-    description: "Kesempatan berjejaring dan bersosialisasi"
-  },
-  {
-    id: 6,
-    time: "22:30 WIB",
-    title: "Penutupan",
-    description: "Closing remarks dan foto bersama"
-  }
+  {
+    id: 1,
+    time: "18:30 WIB",
+    title: "Pendaftaran Tamu",
+    description: "Tamu dipersilakan hadir dan melakukan registrasi"
+  },
+  {
+    id: 2,
+    time: "19:00 WIB",
+    title: "Pembukaan Acara",
+    description: "Opening ceremony dan sambutan"
+  },
+  {
+    id: 3,
+    time: "19:30 WIB",
+    title: "Welcome Dinner",
+    description: "Makan malam bersama dengan hidangan premium"
+  },
+  {
+    id: 4,
+    time: "20:30 WIB",
+    title: "Entertainment",
+    description: "Pertunjukan musik live dan hiburan spesial"
+  },
+  {
+    id: 5,
+    time: "21:30 WIB",
+    title: "Networking Session",
+    description: "Kesempatan berjejaring dan bersosialisasi"
+  },
+  {
+    id: 6,
+    time: "22:30 WIB",
+    title: "Penutupan",
+    description: "Closing remarks dan foto bersama"
+  }
 ];
 
 // Interface untuk Timeline
@@ -104,19 +104,21 @@ const TimelineSection = () => {
             </EditableText>
           </h2>
           <div className="h-1 w-32 bg-gold/50 mx-auto" />
-          <p className="text-lg text-foreground/70">
+          
+          {/* PERBAIKAN DOM NESTING: Ganti <p> dengan <div> */}
+          <div className="text-lg text-foreground/70">
             {/* 2. EDITABLE TEXT: Subjudul Section */}
             <EditableText onSave={handleSectionTextSave(setSectionSubtitle, 'subtitle')} tagName="span">
                 {sectionSubtitle}
             </EditableText>
-          </p>
+          </div>
         </div>
         
         {/* Timeline */}
         <div className="space-y-6">
           {timelineEvents.map((event, index) => (
             <div 
-              key={event.id} // Menggunakan ID untuk key
+              key={event.id} 
               className="flex gap-6 animate-fade-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -150,12 +152,14 @@ const TimelineSection = () => {
                         {event.title}
                     </EditableText>
                   </h3>
-                  <p className="text-foreground/70">
+                  
+                  {/* PERBAIKAN DOM NESTING: Ganti <p> dengan <div> */}
+                  <div className="text-foreground/70">
                     {/* 5. EDITABLE TEXT: Deskripsi Event */}
                     <EditableText onSave={handleItemSave(event.id, 'description')} tagName="span">
                         {event.description}
                     </EditableText>
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
