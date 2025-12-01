@@ -76,21 +76,24 @@ const VenueSection = () => {
                                         {data.locationTitle}
                                     </EditableText>
                                 </h3>
-                                <p className="text-lg text-foreground/80">
+                                {/* PERBAIKAN: Ganti <p> dengan <div> */}
+                                <div className="text-lg text-foreground/80">
                                     <EditableText onSave={handleSave('venueName')} tagName="span">
                                         {data.venueName}
                                     </EditableText>
-                                </p>
-                                <p className="text-foreground/60">
+                                </div>
+                                {/* PERBAIKAN: Ganti <p> dengan <div> */}
+                                <div className="text-foreground/60">
                                     <EditableText onSave={handleSave('hotelName')} tagName="span">
                                         {data.hotelName}
                                     </EditableText>
-                                </p>
-                                <p className="text-sm text-foreground/50 mt-2">
+                                </div>
+                                {/* PERBAIKAN: Ganti <p> dengan <div> */}
+                                <div className="text-sm text-foreground/50 mt-2">
                                     <EditableText onSave={handleSave('address')} tagName="span">
                                         {data.address}
                                     </EditableText>
-                                </p>
+                                </div>
                             </div>
                         </div>
                         
@@ -103,11 +106,12 @@ const VenueSection = () => {
                                         {data.dateTitle}
                                     </EditableText>
                                 </h3>
-                                <p className="text-lg text-foreground/80">
+                                {/* PERBAIKAN: Ganti <p> dengan <div> */}
+                                <div className="text-lg text-foreground/80">
                                     <EditableText onSave={handleSave('dateValue')} tagName="span">
                                         {data.dateValue}
                                     </EditableText>
-                                </p>
+                                </div>
                             </div>
                         </div>
                         
@@ -120,11 +124,12 @@ const VenueSection = () => {
                                         {data.timeTitle}
                                     </EditableText>
                                 </h3>
-                                <p className="text-lg text-foreground/80">
+                                {/* PERBAIKAN: Ganti <p> dengan <div> */}
+                                <div className="text-lg text-foreground/80">
                                     <EditableText onSave={handleSave('timeValue')} tagName="span">
                                         {data.timeValue}
                                     </EditableText>
-                                </p>
+                                </div>
                             </div>
                         </div>
                     </div>

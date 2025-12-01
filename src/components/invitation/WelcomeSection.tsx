@@ -1,20 +1,28 @@
-import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg"; // Path dipertahankan
-import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg"; // Path dipertahankan
+// src/components/invitation/WelcomeSection.tsx
+
+import { useState, useEffect } from "react"; // useState/useEffect dipertahankan jika Anda ingin menggunakannya
+import satinEmeraldBg from "@/assets/satin-emerald-bg.jpg"; 
+import goldBokehOverlay from "@/assets/gold-bokeh-overlay.jpg"; 
 import EditableText from "@/components/EditableText";
-import useContent from "@/hooks/useContent"; // Import hook baru
+import useContent from "@/hooks/useContent"; // Import hook Content Statis
+
+// Nilai default, digunakan jika database kosong atau gagal dimuat
+const DEFAULT_TITLE = "Selamat Datang";
+const DEFAULT_DESCRIPTION = "Dengan penuh kebahagiaan dan kehormatan, kami mengundang Anda untuk berbagi momen istimewa bersama kami dalam perayaan yang penuh keajaiban dan keanggunan.";
+const DEFAULT_QUOTE = "Setiap momen berharga dimulai dengan undangan untuk bersama";
+
 
 const WelcomeSection = () => {
     // --- MENGAMBIL DATA DARI SUPABASE ---
-    const { content, isLoading, updateContent } = useContent();
+    const { content, isLoading, updateContent } = useContent('welcome'); // Gunakan sectionId 'welcome'
 
-    // Nilai default jika data belum dimuat atau kosong
-    const title = content.title || "Selamat Datang";
-    const description = content.description || "Dengan penuh kebahagiaan dan kehormatan, kami mengundang Anda untuk berbagi momen istimewa bersama kami dalam perayaan yang penuh keajaiban dan keanggunan.";
-    const quote = content.quote || "Setiap momen berharga dimulai dengan undangan untuk bersama";
+    // Ambil nilai dari content hook, fallback ke default jika kosong
+    const title = content.title || DEFAULT_TITLE;
+    const description = content.description || DEFAULT_DESCRIPTION;
+    const quote = content.quote || DEFAULT_QUOTE;
 
     // Fungsi untuk menyimpan perubahan, kini memanggil updateContent
     const handleSave = (fieldName: string) => async (newContent: string) => {
-        console.log(`[WELCOME SECTION] Memperbarui field ${fieldName} ke: ${newContent}`);
         await updateContent(fieldName, newContent);
     };
     
@@ -29,7 +37,7 @@ const WelcomeSection = () => {
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-            {/* Backgrounds... (Tetap sama) */}
+            {/* Backgrounds... */}
             <div 
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${satinEmeraldBg})` }}
@@ -47,7 +55,6 @@ const WelcomeSection = () => {
                 <div className="space-y-4">
                     <h2 className="text-5xl md:text-7xl font-bold text-gold">
                         {/* 1. EDITABLE TEXT: Judul Utama */}
-                        {/* onSave sekarang memanggil handleSave langsung dengan field name */}
                         <EditableText onSave={handleSave('title')} tagName="span">
                             {title}
                         </EditableText>
@@ -55,15 +62,15 @@ const WelcomeSection = () => {
                     <div className="h-1 w-32 bg-gold/50 mx-auto" />
                 </div>
                 
+                {/* 2. EDITABLE TEXT: Deskripsi Sambutan (Dibungkus <div> untuk Fix DOM Nesting) */}
                 <div className="text-xl md:text-2xl text-foreground/90 leading-relaxed max-w-2xl mx-auto">
-                    {/* 2. EDITABLE TEXT: Deskripsi Sambutan */}
                     <EditableText onSave={handleSave('description')} tagName="span">
                         {description}
                     </EditableText>
                 </div>
                 
+                {/* 3. EDITABLE TEXT: Kutipan (Dibungkus <div> untuk Fix DOM Nesting) */}
                 <div className="text-lg md:text-xl text-gold/80 italic">
-                    {/* 3. EDITABLE TEXT: Kutipan */}
                     <EditableText onSave={handleSave('quote')} tagName="span">
                         "{quote}"
                     </EditableText>

@@ -1,101 +1,119 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+// src/hooks/useContent.ts
 
-// Tipe untuk struktur data yang kita harapkan
-interface ContentMap {
-    [key: string]: string;
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase'; // Import client Supabase Anda
+
+// Interface untuk data content yang tersimpan dalam format JSON
+interface ContentData {
+    title: string;
+    description: string;
+    quote: string;
+    [key: string]: string; // Memungkinkan properti lain
 }
 
 interface UseContentResult {
-    content: ContentMap;
+    content: ContentData;
     isLoading: boolean;
     updateContent: (fieldName: string, newValue: string) => Promise<void>;
 }
 
-// Nama baris (record) di tabel editable_content yang akan kita gunakan
-const CONTENT_RECORD_ID = 'welcome_section'; 
+// ID BARIS yang menyimpan data Welcome Section di tabel editable_content
+// Dalam implementasi nyata, ini harusnya diambil dari DB atau environment variable
+const WELCOME_SECTION_ID = 'welcome_section'; 
 
-export default function useContent(): UseContentResult {
-    // State untuk menyimpan semua konten (title, description, quote)
-    const [content, setContent] = useState<ContentMap>({});
+// Nilai default jika fetch gagal atau data belum ada
+const DEFAULT_CONTENT: ContentData = {
+    title: "Selamat Datang",
+    description: "Dengan penuh kebahagiaan dan kehormatan, kami mengundang Anda untuk berbagi momen istimewa bersama kami dalam perayaan yang penuh keajaiban dan keanggunan.",
+    quote: "Setiap momen berharga dimulai dengan undangan untuk bersama",
+};
+
+
+export default function useContent(sectionId: string = WELCOME_SECTION_ID): UseContentResult {
+    const [content, setContent] = useState<ContentData>(DEFAULT_CONTENT);
     const [isLoading, setIsLoading] = useState(true);
+    
+    // Simpan ID baris yang ditemukan
+    const [recordId, setRecordId] = useState<string | null>(null);
 
-    // 1. FUNGSI FETCH: Mengambil data dari Supabase
+    // 1. FUNGSI FETCH
     const fetchContent = useCallback(async () => {
         setIsLoading(true);
         try {
+            // Fetch baris berdasarkan section_name
             const { data, error } = await supabase
                 .from('editable_content')
-                // Kolom yang diambil: id dan content_json
                 .select('id, content_json')
-                .eq('section_name', CONTENT_RECORD_ID)
-                .single(); // Mengambil hanya satu baris
+                .eq('section_name', sectionId)
+                .single();
 
-            if (error && error.code !== 'PGRST116') { // PGRST116 = Baris tidak ditemukan
+            if (error && error.code !== 'PGRST116') { // PGRST116 = Not Found (tidak masalah)
                 throw error;
             }
 
             if (data && data.content_json) {
-                // Supabase menyimpan JSONB, kita parse isinya
-                setContent(data.content_json as ContentMap);
+                // Set ID untuk update nanti
+                setRecordId(data.id); 
+                // Gabungkan default content dengan data dari DB
+                setContent({ ...DEFAULT_CONTENT, ...data.content_json as ContentData });
             } else {
-                // Jika baris tidak ditemukan, inisialisasi dengan nilai default (opsional)
-                setContent({}); 
+                // Jika data tidak ditemukan, kita akan menggunakan DEFAULT_CONTENT
+                setRecordId(null);
+                setContent(DEFAULT_CONTENT);
             }
-        } catch (err: any) {
-            console.error("Error fetching editable content:", err.message);
-            // Tetap set state ke default agar aplikasi tidak macet
-            setContent({}); 
+        } catch (err) {
+            console.error("Error fetching content:", err);
+            // Fallback ke default content saat terjadi error
+            setContent(DEFAULT_CONTENT); 
         } finally {
             setIsLoading(false);
         }
-    }, []);
-
-    // 2. FUNGSI UPDATE: Menyimpan perubahan ke Supabase
-    const updateContent = async (fieldName: string, newValue: string) => {
-        // Optimistic UI Update: Update state lokal terlebih dahulu
-        const newContent = { ...content, [fieldName]: newValue };
-        setContent(newContent); 
-
-        try {
-            // Cek apakah baris konten sudah ada (diasumsikan kita selalu punya satu record)
-            const { data: existingData } = await supabase
-                .from('editable_content')
-                .select('id, content_json')
-                .eq('section_name', CONTENT_RECORD_ID)
-                .single();
-
-            // Payload baru menggabungkan konten lama dan baru
-            const updatedJson = { 
-                ...(existingData?.content_json as ContentMap || {}),
-                [fieldName]: newValue 
-            };
-            
-            if (existingData) {
-                // Jika sudah ada: UPDATE record yang ada
-                await supabase
-                    .from('editable_content')
-                    .update({ content_json: updatedJson, updated_at: new Date().toISOString() })
-                    .eq('id', existingData.id);
-            } else {
-                // Jika belum ada: INSERT record baru
-                await supabase
-                    .from('editable_content')
-                    .insert([{ section_name: CONTENT_RECORD_ID, content_json: updatedJson }]);
-            }
-
-            console.log(`[Supabase] Field '${fieldName}' updated successfully.`);
-
-        } catch (err: any) {
-            console.error("Error updating editable content:", err.message);
-            // Rollback UI (opsional, untuk kesederhanaan kita abaikan)
-            alert(`Gagal menyimpan perubahan untuk ${fieldName}. Cek konsol.`);
-        }
-    };
+    }, [sectionId]);
 
     useEffect(() => {
         fetchContent();
     }, [fetchContent]);
+
+    // 2. FUNGSI UPDATE (dipanggil dari EditableText)
+    const updateContent = useCallback(async (fieldName: string, newValue: string) => {
+        const newContent = { ...content, [fieldName]: newValue };
+
+        // Payload yang akan dikirim ke Supabase
+        const payload = { content_json: newContent }; 
+
+        try {
+            if (recordId) {
+                // UPDATE: Jika baris sudah ada
+                const { error } = await supabase
+                    .from('editable_content')
+                    .update(payload)
+                    .eq('id', recordId);
+
+                if (error) throw error;
+            } else {
+                // INSERT: Jika baris belum ada (hanya terjadi sekali saat pertama kali edit)
+                const insertPayload = { ...payload, section_name: sectionId };
+                const { data, error } = await supabase
+                    .from('editable_content')
+                    .insert([insertPayload])
+                    .select('id')
+                    .single();
+
+                if (error) throw error;
+                
+                // Simpan ID baris baru
+                setRecordId(data.id); 
+            }
+
+            // Update state lokal setelah sukses
+            setContent(newContent);
+            console.log(`[SUPABASE] Successfully updated ${fieldName} in ${sectionId}.`);
+            
+        } catch (err) {
+            console.error("Gagal menyimpan perubahan ke DB:", err);
+            // Opsional: Tampilkan toast error di sini
+        }
+    }, [content, recordId, sectionId]); // Dependency pada content, recordId, dan sectionId
 
     return { content, isLoading, updateContent };
 }
