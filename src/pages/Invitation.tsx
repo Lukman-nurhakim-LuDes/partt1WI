@@ -12,7 +12,7 @@ import PhotoStorySection from "@/components/invitation/PhotoStorySection";
 // --- IMPOR TAMBAHAN ---
 // Impor Kontrol Musik Global (dilihat dari struktur folder Anda)
 import GlobalMusicControl from "@/components/invitation/GlobalMusicControl"; 
-import CountdownTimer from "@/components/invitation/CountdownTimer";
+
 import AdminToggle from "@/components/AdminToggle"; // Tombol Admin yang sudah diperbaiki
 
 const Invitation = () => {
@@ -27,9 +27,7 @@ const Invitation = () => {
       {/* 1. Halaman Selamat Datang / Intro */}
       <WelcomeSection />
 
-      {/* 2. Bagian Hitung Mundur */}
-      <CountdownTimer/> 
-
+      
       {/* 3. BAGIAN PHOTO STORYTELLING (CERITA CINTA) */}
       <PhotoStorySection /> 
       
